@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" initialize="initHandler(event)"
+		 xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)" dropShadowVisible="true"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" >
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.views.popupViews.popView_PurchaseOrder;
+			import com.module.views.popupViews.popView_SearchCriteria;
+			import com.module.views.popupViews.popView_WarehouseReceipt;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			public var popView:int = 0
+			public var mainID:String = "";
+			public var mainComp:Object;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				
+			}
+			
+			
+			public function cancelClickHandler(event:MouseEvent):void
+			{
+				
+				PopUpManager.removePopUp(this);
+			}
+			
+			
+			protected function initHandler(event:FlexEvent):void
+			{
+				var log3:ItemsTransEvent;
+				switch(popView){
+					case 0:
+						var pop:popView_PurchaseOrder = new popView_PurchaseOrder();
+						pop.poID = mainID;
+						log3 = new ItemsTransEvent(ItemsTransEvent.GET_EXIST_PO,{popBox:pop,poID:mainID})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+						mainCont.addElement(pop);
+					break;
+					case 1:
+						var popWr:popView_WarehouseReceipt = new popView_WarehouseReceipt();
+						popWr.poID = mainID;
+						log3 = new ItemsTransEvent(ItemsTransEvent.GET_EXIST_WR,{popBox:popWr,whrID:mainID})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+						mainCont.addElement(popWr);
+					break;
+					case 2:
+						var popSC:popView_SearchCriteria = new popView_SearchCriteria();
+						popSC.mainComp = mainComp;
+						popSC.sType = int(mainID);
+						popSC.popPanel = this;
+						closeHG.visible = closeHG.includeInLayout = false;
+						mainCont.addElement(popSC);
+						mainCont.mouseChildren = true;
+						mainCont.mouseEnabled = true;
+					break;
+				}
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup id="mainCont" width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5" horizontalAlign="center" mouseEnabled="false" mouseChildren="false">
+			
+	</s:VGroup>
+	<s:HGroup id="closeHG" width="100%" horizontalAlign="center" verticalAlign="middle" height="30" paddingBottom="5">		
+		<s:Button label="Close" click="cancelClickHandler(event)"/>
+	</s:HGroup>
+</s:Panel>

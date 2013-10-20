@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			public var poID:String = "";
+			
+			public function updateFields(_data:Object):void{
+				/*arrObj.whrID = listXML.@whrID;
+				arrObj.whrID_label = listXML.@whrID_label;
+				arrObj.branch = listXML.@branch;
+				arrObj.poID_label = listXML.@poID_label;
+				arrObj.supInvNo = listXML.@whr_supInvNo;
+				arrObj.supInvDate = listXML.@whr_supInvDate;
+				arrObj.prepBy = listXML.@prepBy;
+				arrObj.checkBy = listXML.@checkBy;
+				arrObj.dateTrans = listXML.@dateTrans;*/
+				
+				txtBranch.text = _data.branch;
+				txtPONo.text = _data.poID_label; 
+				txtSupInvNo.text = _data.supInvNo;
+				dfInvDate.text = _data.supInvDate;
+				txtWRNo.text = updateWRID(_data);
+				dfDate.text = _data.dateTrans;
+				txtPrepBy.text = _data.prepBy;
+				txtCheckBy.text = _data.checkBy;
+			}
+			
+			public function updateWRID(_data:Object):String{
+				var yr:String = String(_data.dateTrans).split("-")[0];
+				return "WR-"+_data.bCode+"-"+yr.substr(2)+"-"+_data.whrID_label;
+			}
+			
+			public function updateGrid(arr:ArrayCollection):void{
+				/*
+				arrObj.whrdID = obj.@whrdID;
+				arrObj.whrd_whrID = obj.@whrd_whrID;
+				arrObj.whrd_podID = obj.@whrd_podID;
+				arrObj.whrd_prodID = obj.@whrd_prodID;
+				arrObj.prodDesc = obj.@prodDescrip;
+				arrObj.qty = obj.@whrd_qty;
+				arrObj.qtyRec = obj.@whrd_qty_rec;
+				arrObj.pkgNo = obj.@whrd_pkgNo;
+				arrObj.prodID = obj.@prodCode;
+				arrObj.modelNo = obj.@prodModel;
+				arrObj.prodCode = obj.@prodCode;
+				arrObj.remarks = obj.@remLabel;
+				arrObj.num = num;
+				*/
+				dg.dataProvider = arr;
+				
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:VGroup id="cont" width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:VGroup id="mainCont" width="100%" height="100%" minWidth="600">
+			<s:BorderContainer width="100%" cornerRadius="10" borderStyle="inset" >
+				<s:borderStroke> 
+					<mx:SolidColorStroke 
+						color="{AccessVars.instance().borderStrokeColor}" 
+						weight="2"/> 
+				</s:borderStroke> 
+				<s:HGroup width="100%" height="100%" fontSize="16" verticalAlign="middle">
+					<s:VGroup  width="30%" height="100%" paddingBottom="10" paddingTop="10" paddingLeft="10" paddingRight="10" verticalAlign="middle">
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Branch" width="50" textAlign="right"/>
+							<s:TextInput id="txtBranch" width="100%" editable="false" selectable="false" borderVisible="false"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="PO No." width="50" textAlign="right"/>
+							<s:Label id="txtPONo" width="100%" fontSize="16" />
+						</s:HGroup>
+					</s:VGroup>
+					
+					<s:VGroup  width="40%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5" verticalAlign="middle">
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Supplier's Invoice No." width="130" textAlign="right"/>
+							<s:TextInput id="txtSupInvNo" width="100%" editable="false" selectable="false" borderVisible="false"/>
+						</s:HGroup>	
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label width="130" text="Invoice Date" textAlign="right"/>
+							<s:TextInput id="dfInvDate" width="100%" editable="false" selectable="false" borderVisible="false"/>
+						</s:HGroup>						
+					</s:VGroup>
+					<s:VGroup  width="30%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5" verticalAlign="middle">
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="WR No." width="50" textAlign="right"/>
+							<s:TextInput id="txtWRNo" width="100%" editable="false" selectable="false" borderVisible="false"/>
+						</s:HGroup>	
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label width="50" text="Date" textAlign="right"/>
+							<s:TextInput id="dfDate" width="100%" editable="false" selectable="false" borderVisible="false"/>
+						</s:HGroup>						
+					</s:VGroup>
+				</s:HGroup>
+			</s:BorderContainer>
+			<s:Spacer height="5"/>
+			<s:DataGrid id="dg" width="100%" height="100%" sortableColumns="false" fontSize="12" editable="false" >
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="40" dataField="num" headerText="No." editable="false" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn dataField="qty" headerText="Qty" width="40"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="center"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="unit" headerText="Unit" width="40"  editable="false"/>
+						<s:GridColumn dataField="modelNo" headerText="Item / Model No." width="120"  editable="false">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="prodDesc" headerText="Description" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="pkgNo" headerText="Pkg No." width="100"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn dataField="qtyRec" headerText="Qty Rcv" width="70"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="center"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="remarks" headerText="Remarks" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left" wordWrap="true" width="120"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						
+					</s:ArrayList>
+				</s:columns>
+			</s:DataGrid>
+			<s:HGroup width="100%" verticalAlign="middle" gap="5" paddingLeft="10">
+				<s:Label text="Prepared By" textAlign="right"/>
+				<s:TextInput id="txtPrepBy" width="45%" editable="false" selectable="false"/>
+				<s:Spacer width="10%"/>
+				<s:Label text="Checked By" textAlign="right"/>
+				<s:TextInput id="txtCheckBy" width="45%" editable="false" selectable="false"/>
+				
+			</s:HGroup>
+		</s:VGroup>	
+	</s:VGroup>
+</s:Group>

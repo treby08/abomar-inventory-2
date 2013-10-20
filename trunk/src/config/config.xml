@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<!--<http host="http://www.philnig.com/abomar/flexServices" imgPath="http://www.philnig.com/abomar/images/"/>-->
+	<http host="http://www.abomar.com/ics_pro/flexServices" imgPath="http://www.abomar.com/ics_pro/images/"/>
+	<!--<http host="../flexServices" imgPath="../images/"/>-->
+</config>

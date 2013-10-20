@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" fontSize="13" fontFamily="Arial" color="black"
+			   xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="appcreationCompleteHandler(event)"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="1000" minHeight="650" preinitialize="preInit(event)" 
+			   xmlns:views="com.module.views.*" xmlns:business="com.module.business.*" 
+			   xmlns:control="com.module.control.*" xmlns:containers="com.flexlib.containers.*" >
+	<fx:Style source="AeonGraphical.css"/>
+	<fx:Script>
+		<![CDATA[
+			import com.flexlib.controls.tabBarClasses.SuperTab;
+			import com.module.views.BranchBox;
+			import com.module.views.CustomerBox;
+			import com.module.views.CustomerListBox;
+			import com.module.views.InventoryBox;
+			import com.module.views.InvoiceBox;
+			import com.module.views.InvoiceListBox;
+			import com.module.views.LoginPanel;
+			import com.module.views.PaymentBox;
+			import com.module.views.ProductBox;
+			import com.module.views.ProductList;
+			import com.module.views.PurchaseOrderBox;
+			import com.module.views.PurchaseOrderListBox;
+			import com.module.views.PurchaseReqBox;
+			import com.module.views.ReportBox;
+			import com.module.views.SalesBox;
+			import com.module.views.SalesQuoteBox;
+			import com.module.views.SupplierBox;
+			import com.module.views.UserBox;
+			import com.module.views.WareDiscrepancyBox;
+			import com.module.views.WareReceiptBox;
+			import com.variables.AccessVars;
+			import com.variables.SecurityType;
+			
+			import flash.utils.setTimeout;
+			
+			import flashx.textLayout.formats.Float;
+			
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.Group;
+			
+			[Embed(source="assets/icons/home.png")]
+			private var home_icon:Class;
+			private var logPanel:LoginPanel;
+			
+			protected function preInit(event:FlexEvent):void
+			{
+				var d:Date = new Date()
+				var configLoad:URLLoader = new URLLoader(new URLRequest("config/config.xml?v="+d.toDateString()));
+				configLoad.addEventListener(Event.COMPLETE,configLoadComp);
+				
+				AccessVars.instance().test = parameters.test?parameters.test:0;
+			}
+			
+			protected function configLoadComp(event:Event):void
+			{
+				var configXML:XML = XML(event.target.data);/*XML("<config>" +
+					"<http host=\"../flexServices\" imgPath=\"../images/\"/>" +
+					"</config>");//XML(event.target.data);*/
+				trace("configXML:",configXML.toXMLString())
+				SecurityType.HTTP_HOST = configXML.http.@host;
+				SecurityType.IMG_PATH = configXML.http.@imgPath;
+				
+				super.initialized = true;
+			}
+			
+			protected function appcreationCompleteHandler(event:FlexEvent):void
+			{
+				AccessVars.instance().mainApp = this;
+				minHeight = screen.height;
+				showLoginPanel();
+				callLater(initNonClosableTab);
+			}
+			
+			private function initNonClosableTab():void
+			{
+				//trace("tn.numChildren",tn.numChildren);
+				tn.setClosePolicyForTab(0, SuperTab.CLOSE_NEVER);
+			}
+			
+			public function showLoginPanel():void{
+				if (logPanel){
+					PopUpManager.removePopUp(logPanel);
+					logPanel = null;
+				}
+				logPanel = new LoginPanel();
+				PopUpManager.addPopUp(logPanel,this,true);
+				PopUpManager.centerPopUp(logPanel);
+			}
+			
+			public function loginUser():void{
+				menNav.cntrl.visible = menNav.cntrl.includeInLayout = true;
+				menNav.lblforTest.visible = false;
+				menNav.lblforTest.x = 200
+				setTimeout(function():void{
+					menNav.lblforTest.x = 200+(menNav.spCer.width/2 - menNav.lblforTest.width/2);
+					menNav.lblforTest.visible = AccessVars.instance().test ==1?true:false;
+				},100);
+				floatMenuVisible(true);
+				initNonClosableTab();
+				
+				var d:Date = new Date()
+				var configLoad:URLLoader = new URLLoader(new URLRequest("assets/menuXML/"+SecurityType.accessMode()+".xml?v="+d.toDateString()));
+				configLoad.addEventListener(Event.COMPLETE,configUserPriv);
+			}
+			
+			protected function configUserPriv(event:Event):void
+			{
+				var userPrivXML:XML = XML(event.target.data);
+				navBox.updateNavList(userPrivXML);
+			}
+			
+			public function initializeApp():void{
+				floatMenuVisible(false);
+				if (tn.numChildren>1){
+					for(var i:int=tn.numChildren-1;i>=1;i--){
+						tn.removeElementAt(i);
+					}
+				}
+			}
+			
+			public function appChange(event:MouseEvent,type:int,code:String=""):void
+			{
+				/* floatMenuVisible(false);
+				if (mainCont.numElements > 1)
+					mainCont.removeElementAt(0); */
+				var objBox:Group;
+				var _cnv:Canvas = new Canvas();
+				switch(type){
+					case 0:
+						objBox = new UserBox();
+						_cnv.label = "User";
+					break;
+					case 1:
+						if (code == "cus_new"){
+							objBox = new CustomerBox();
+							_cnv.label = "Customer";
+						}else if (code == "cus_lst"){
+							objBox = new CustomerListBox();
+							_cnv.label = "Customers";
+						}
+					break;
+					case 2:
+						if (code == "inv_np"){
+							objBox = new ProductBox();	
+							_cnv.label = "New Product";
+						}else if (code == "inv_pl"){
+							objBox = new ProductList();	
+							_cnv.label = "Product";						
+						}else if (code == "inv_wr" || code ==	"rep_inv_wr"){
+							objBox = new WareReceiptBox();
+							if (code ==	"rep_inv_wr"){
+								WareReceiptBox(objBox).isProcess = true;
+								_cnv.label = "Warehouse Receipt List";
+							}else
+								_cnv.label = "Warehouse Receipt";
+						}else if (code == "inv_wd" || code == "rep_inv_wd"){
+							objBox = new WareDiscrepancyBox();	
+							if (code == "rep_inv_wd"){
+								WareDiscrepancyBox(objBox).isProcess = true;
+								_cnv.label = "Warehouse Discrepancy List";
+							}else
+								_cnv.label = "Warehouse Discrepancy";
+						}
+					break;
+					case 3:
+						if (code == "sal_nsq"){
+							objBox = new SalesQuoteBox();
+							_cnv.label = "Quote";
+						}else if (code == "sal_nsi"){
+							objBox = new InvoiceBox();
+							_cnv.label = "Invoice";
+						
+						}else if (code == "sal_nsil" || code == "rep_sal_nsi"){
+							objBox = new InvoiceListBox();
+							if(code == "rep_sal_nsi")
+								InvoiceListBox(objBox).isProcess = true;
+							_cnv.label = "Invoice List";
+						}else if (code == "sal_pay"){
+							objBox = new PaymentBox();
+							_cnv.label = "Payment";						
+						}else if (code == "rep_sal_nsq"){							
+							objBox = new SalesQuoteBox();
+							SalesQuoteBox(objBox).isProcess = true;
+							_cnv.label = "Quote List";
+						}
+						
+					break;
+					/*pur_prl pur_pol*/
+					case 4:
+						if (code == "pur_pr" || code == "pur_prl"){
+							objBox = new PurchaseReqBox();
+							if (code == "pur_prl"){
+								PurchaseReqBox(objBox).isProcess = true;
+								_cnv.label = "Purchase Requisition List";
+							}else
+								_cnv.label = "Purchase Requisition";
+						}else if (code == "pur_po"){
+							objBox = new PurchaseOrderBox();
+							_cnv.label = "Purchase Order";
+						}else if (code == "pur_pol"){
+							objBox = new PurchaseOrderListBox();
+							_cnv.label = "Purchase Order List";
+						}
+					break;
+					case 5:
+						objBox = new BranchBox();
+						_cnv.label = "Branches";
+					break;
+					case 6:
+						objBox = new SupplierBox();
+						_cnv.label = "Suppliers";
+						break;
+					/* case 6:
+						objBox = new ReportBox();
+						_cnv.label = "Report";
+					break; */
+					default:
+						return;
+					break;
+				}
+				if (objBox == null)
+					return;
+				
+				_cnv.percentWidth = 100;
+				_cnv.percentHeight = 100;
+				_cnv.addElement(objBox);
+				_cnv.setStyle("closable",true);
+				_cnv.setStyle("fontFamily","Arial");
+				_cnv.setStyle("fontWeight","normal");
+				_cnv.setStyle("fontSize",12);
+				tn.addItem(_cnv);
+				tn.selectedIndex = tn.numChildren-1;
+				/* if(tn.numChildren > 5)
+					tn.setStyle("tabWidth",tn.width/tn.numChildren); */
+				//mainCont.addElementAt(objBox,0);
+			}
+			
+			public function floatMenuVisible(value:Boolean):void{
+				
+				floatMenu.visible = floatMenu.includeInLayout = value;
+				if (mainCont.numElements > 1)
+					mainCont.removeElementAt(0);
+				if (tn && tn.numChildren > 0)
+					tn.selectedIndex = 0;
+				/* switch (SecurityType.accessMode()){
+					case SecurityType.MODERATOR:
+						forMod.visible = forMod.includeInLayout = true;
+						forUser.visible = forUser.includeInLayout = false;
+						break;
+					case SecurityType.ENCODER:
+						forMod.visible = forMod.includeInLayout = false;
+						forUser.visible = forUser.includeInLayout = true;
+						break;
+					case SecurityType.ADMIN:
+						forMod.visible = forMod.includeInLayout = true;
+						forUser.visible = forUser.includeInLayout = true;
+						break;
+				} */
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<business:Services id="httpService"/>
+		<control:Controller id="controller"/>
+	</fx:Declarations>
+	<s:VGroup width="100%" height="100%">
+		<views:MenuNav width="100%" id="menNav"/>
+		<s:BorderContainer id="mainCont" width="100%" height="100%" styleName="mainCont">
+			<s:BorderContainer id="floatMenu" width="100%" height="100%" borderAlpha="0" visible="false" includeInLayout="false">
+				<!--<s:borderStroke> 
+					<mx:SolidColorStroke 
+						color="0xAAAAAA" 
+						weight="2"/> 
+				</s:borderStroke>-->
+				<containers:SuperTabNavigator id="tn" width="100%" height="100%" styleName="mainCont" horizontalGap="2"  fontFamily="Helvetica, san-serif"
+									  allowTabSqueezing="true" fontSize="16" cornerRadius="5" tabHeight="35" minTabWidth="200" fontWeight="bold"
+									  >
+					<mx:Canvas label="Home" width="100%" styleName="tabCloseButtonStyleName" backgroundAlpha="0" icon="{home_icon}">
+						<views:NavigationBox id="navBox" width="200" height="100%"/>
+					</mx:Canvas>
+				</containers:SuperTabNavigator>
+				
+				<!--<s:VGroup paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10" gap="25">
+					<s:HGroup gap="30" id="forMod">
+						<s:Button label="User" icon="assets/icons/icon_user.png" iconPlacement="top" width="120" height="100" click="appChange(event,0)"  useHandCursor="true" buttonMode="true"/>
+						<s:Button label="Customer" icon="assets/icons/icon_cust.png" iconPlacement="top" width="120" height="100" click="appChange(event,1)"  useHandCursor="true" buttonMode="true"/>
+						<s:Button width="120" height="100" label="Products" buttonMode="true"
+								  click="appChange(event,2)" icon="assets/icons/icon_prod.png"
+								  iconPlacement="top" useHandCursor="true"/>
+					</s:HGroup>
+					<s:HGroup gap="30" id="forUser">
+						<s:Button label="Sales" icon="assets/icons/icon_sales.png" iconPlacement="top" width="120" height="100" click="appChange(event,3)"  useHandCursor="true" buttonMode="true"/>
+						<s:Button label="Inventory" icon="assets/icons/icon_inv.png" iconPlacement="top" width="120" height="100" click="appChange(event,4)"  useHandCursor="true" buttonMode="true"/>
+						<s:Button width="120" height="100" label="Report" buttonMode="true"
+								  click="appChange(event,5)" icon="assets/icons/icon_report.png"
+								  iconPlacement="top" useHandCursor="true"/>
+					</s:HGroup>
+				</s:VGroup>-->
+			</s:BorderContainer>
+		</s:BorderContainer>
+		
+	</s:VGroup>
+	
+</s:Application>

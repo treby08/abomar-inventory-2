@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" title="Abomar Login" creationComplete="creationCompleteHandler(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="300" height="115" xmlns:business="com.module.business.*">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import assets.skins.skin_Button;
+			
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.business.Services;
+			import com.module.events.LoginEvent;
+			import com.variables.AccessVars;
+			import com.variables.SecurityType;
+			
+			import flash.utils.setTimeout;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.AsyncToken;
+			import mx.rpc.Responder;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
+			
+			import spark.components.Application;
+			protected function logclickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+				if (txtUser.text != "" && txtPass.text != ""){
+					var log:LoginEvent = new LoginEvent(LoginEvent.SIGN_IN,{username:txtUser.text,password:txtPass.text})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log);
+				}else{
+					Alert.show("Incorrect username/password","Login Error",4,null,function():void{
+						AccessVars.instance().mainApp.showLoginPanel();
+					});
+					
+				}
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtUser.text = "admin";
+				txtPass.text = "qwerty";
+				//setTimeout(function():void{txtUser.setFocus();txtUser.prompt = "User"},1000);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		
+	</fx:Declarations>
+	<s:HGroup width="100%" height="100%" horizontalAlign="center" paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10">
+		
+		<s:VGroup width="100%" height="100%" gap="11">
+			<s:TextInput id="txtUser" width="100%" enter="{btnlogin.dispatchEvent(new MouseEvent(MouseEvent.CLICK))}" prompt="Username"/>
+			<s:TextInput id="txtPass" width="100%" displayAsPassword="true" enter="{btnlogin.dispatchEvent(new MouseEvent(MouseEvent.CLICK))}" prompt="Password"/>
+		</s:VGroup>
+		<s:Button id="btnlogin" fontSize="10" icon="assets/icons/icon_login.png" iconPlacement="left" label="Login" click="logclickHandler(event)" height="55" skinClass="assets.skins.skin_Button"/>
+	</s:HGroup>
+</s:Panel>

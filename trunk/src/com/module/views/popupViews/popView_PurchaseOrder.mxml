@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			public var poID:String = "";
+			
+			public function updateFields(_data:Object):void{
+				txtSupplier.text = _data.supplier;
+				txtDeliver.text = _data.deliverTo; 
+				dfDate.text = _data.dateTrans;
+				txtGT.text = numFmttr.format(_data.totalAmt);
+				totWeight.text = _data.totalWeight;
+				var branchItem:Array = String(_data.invoiceTo).split("||");
+				txtInvoice.text = branchItem[0]+"\r"+	branchItem[1]
+					+"\r"+String(branchItem[2]).replace("|"," Ext. ")+"\r"+branchItem[3];
+				txtReqNo.text = _data.poID_label;
+			}
+			
+			public function updateGrid(arr:ArrayCollection):void{
+				dg.dataProvider = arr;
+				numItems.text = arr.length as String;
+				var vat:Number = 0;			
+				var _subTot:Number = 0;
+				var _totWeight:Number = 0;
+				var _totalQty:Number = 0;
+				for each (var item:Object in arr){						
+					_subTot += Number(item.total);
+					_totWeight += Number(item.weight);
+					vat += Number(Number(item.total)*0.12);
+					_totalQty+=Number(item.qty);
+					
+				}
+				txtSubtot.text = numFmttr.format(_subTot);
+				txtVat.text = numFmttr.format(vat);
+				txtGT.text = numFmttr.format(_subTot+vat);
+				totWeight.text = String(_totWeight);
+				numItems.text = String(_totalQty);
+			}
+			
+			private function formatAmtTotal(item:Object, column:GridColumn):String{
+				return numFmttr.format(item.total);
+			}
+			private function formatAmtPrice(item:Object, column:GridColumn):String{
+				return numFmttr.format(item.price);
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:NumberFormatter id="numFmttr" precision="2" useThousandsSeparator="true"  />
+	</fx:Declarations>
+	
+	<s:VGroup id="cont" width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:VGroup id="mainCont" width="100%" height="100%">
+			<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+				<s:borderStroke> 
+					<mx:SolidColorStroke 
+						color="{AccessVars.instance().borderStrokeColor}" 
+						weight="2"/> 
+				</s:borderStroke> 
+				<s:HGroup  width="100%" height="100%" fontSize="16">					
+					<s:HGroup width="50%" verticalAlign="top" height="100%" paddingBottom="10" paddingTop="10" paddingLeft="15" paddingRight="15">
+						<s:Label text="Invoice To" width="90" textAlign="right"/>
+						<s:TextArea id="txtInvoice" width="100%" height="90" editable="false" borderVisible="false" selectable="false" />
+					</s:HGroup>
+					<s:VGroup  width="50%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="PO No." width="60" textAlign="right"/>
+							<s:TextInput id="txtReqNo" width="100%" editable="false" borderVisible="false" selectable="false"/>
+							<s:Label text="Date" textAlign="center"/>
+							<s:TextInput id="dfDate" width="150" editable="false" borderVisible="false" selectable="false"/>
+						</s:HGroup>
+						<s:HGroup  width="100%" verticalAlign="middle">
+							<s:Label text="Supplier" width="60" textAlign="right"/>
+							<s:TextInput id="txtSupplier" width="100%" editable="false" borderVisible="false" selectable="false"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Deliver To" width="60" textAlign="right"/>
+							<s:TextInput id="txtDeliver" width="100%" editable="false" borderVisible="false" selectable="false"/>
+						</s:HGroup>
+					</s:VGroup>
+				</s:HGroup>
+			</s:BorderContainer>
+			<s:Spacer height="5"/>
+			<s:DataGrid id="dg" width="100%" height="100%" minHeight="200" sortableColumns="false" textAlign="center" fontSize="12" 
+						editable="false">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="40" dataField="num" headerText="No." editable="false" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn dataField="qty" headerText="Qty" width="40"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn dataField="unit" headerText="Unit" width="40"  editable="false"/>
+						<s:GridColumn dataField="modelNo" headerText="Item/Model No." width="120"  editable="false">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="prodDesc" headerText="Description" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="weight" headerText="WT" width="40"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn dataField="price" headerText="Price" width="120"  editable="false" labelFunction="formatAmtPrice" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="right"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="total" headerText="Extend" width="120" editable="false" labelFunction="formatAmtTotal" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="right" fontSize="14"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+					</s:ArrayList>
+				</s:columns>
+			</s:DataGrid>
+			<s:HGroup width="100%" verticalAlign="bottom" fontSize="14" paddingTop="3" paddingBottom="3">
+				<s:Label text="Number of Items: "/>
+				<s:Label id="numItems" text="0"/>
+				<s:Spacer width="50%"/>
+				<s:HGroup width="230" height="100%" paddingTop="2" paddingLeft="2" fontWeight="bold">
+					<s:Spacer width="100%"/>
+					<s:Label text="Total Weight: "/>
+					<s:Label id="totWeight" text="0"/>
+					<s:Label text="kg"/>
+				</s:HGroup>
+				<s:VGroup width="50%">
+					<s:HGroup width="100%">
+						<s:Label text="Subtotal" width="90"/>
+						<mx:Text id="txtSubtot" width="100%" text="0.00" textAlign="right"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="VAT" width="90"/>
+						<s:TextInput id="txtVat" width="100%" text="0.00" textAlign="right" editable="false" borderVisible="false" selectable="false"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="TOTAL" fontSize="16"/>
+						<s:Label id="txtGT" textAlign="right" text="0.00" fontSize="18" width="100%" />
+					</s:HGroup>
+				</s:VGroup>
+			</s:HGroup>
+		</s:VGroup>	
+	</s:VGroup>
+</s:Group>

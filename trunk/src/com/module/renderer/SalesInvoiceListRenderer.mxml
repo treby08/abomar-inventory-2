@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.InvoiceListBox;
+			import com.module.views.PurchaseReqBox;
+			import com.module.views.UserPanel;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _isSelected:Boolean = false;
+			private var _theBox:InvoiceListBox;
+			public var isDispatch:Boolean = false;
+			public var isProcess:Boolean = false;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			public function get data():Object{
+				return _data;
+			}
+			
+			public function set theBox(value:InvoiceListBox):void{
+				_theBox = value
+			}
+			
+			public function set isSelected(value:Boolean):void{
+				_isSelected = value
+				if (value)
+					sFill.color = AccessVars.instance().colBgColorOver
+				else
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			public function get isSelected():Boolean{
+				return _isSelected;
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				var arr:Array = String(_data.dateTrans).split("-");
+				var yr:String = String( new Date(arr[0],(arr[1]-1),arr[2]).getFullYear());
+				txtSalesNo.text = _data.sq_quoteNo;
+				txtCustomer.text = _data.acctno +" - "+_data.conPerson;
+				txtDate.text = _data.dateTrans;
+				updateRenderer(_data.siStatus);
+				hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+				if (!isProcess){
+					//hbCont.percentWidth = 100;
+					txtSalesNo.percentWidth = 25
+					txtCustomer.percentWidth = 50
+					txtDate.percentWidth = 25
+					hbContStat.visible = hbContStat.includeInLayout = false;
+				}else {
+					//hbCont.percentWidth = 77;
+					txtSalesNo.percentWidth = 33
+					txtCustomer.percentWidth = 33
+					txtDate.percentWidth = 33
+					hbContStat.visible = hbContStat.includeInLayout = true;
+					
+				}
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				for (var i:int =0; i < _theBox.dgSearch.numElements; i++){
+					(_theBox.dgSearch.getElementAt(i) as SalesInvoiceListRenderer).isSelected = false;
+				}
+				isSelected = true;
+				
+				isDispatch = true;
+				_theBox.theOwner = this;
+				_theBox.clearFields(null);
+				//_theBox.isProcess = isProcess;
+				
+				var obj:Object = _theBox._data = _data;
+								
+				_theBox.txtInvoiceNo.text = obj.sq_quoteNo;
+				_theBox.txtPrepBy.text = obj.prepBy;
+				_theBox.txtAppBy.text = obj.apprBy;
+				_theBox.txtVat.text = obj.sq_vat;
+				_theBox.setSelectedBranch(String(obj.sq_branchID));
+				_theBox.setSelectedCustomer(String(obj.sq_custID));
+				
+				var arr:Array = String(_data.dateTrans).split("-");
+				_theBox.dfDate.selectedDate = new Date(arr[0],(arr[1]-1),arr[2]);
+				trace("obj.sqID:",obj.sqID)
+				_theBox.txtGT.text = obj.totalAmt;
+				
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_SALES_DETAILS,{sqID:obj.sqID,qBox:_theBox,itemRen:this})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				
+				/*_theBox.btnCheckOut.visible = _theBox.btnCheckOut.includeInLayout = false;
+				//_theBox.btnNew.visible = _theBox.btnNew.includeInLayout = true;
+				_theBox.mainCont.enabled = false;
+				_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = !isProcess;
+				_theBox.btnView.visible = _theBox.btnView.includeInLayout = isProcess;*/
+				_theBox.mainCont.enabled = false;
+				_theBox.btnView.visible = _theBox.btnView.includeInLayout = true;
+				if (obj.hasOwnProperty('si_status')){
+					_theBox.cbCancel.selected = int(obj.si_status)==3?true:false;
+					if (int(obj.si_status)!=1 && int(obj.si_status)!=2 && int(obj.si_status)!=3){
+						_theBox.btnCheckOut.visible = _theBox.btnCheckOut.includeInLayout = false;
+						//_theBox.btnNew.visible = _theBox.btnNew.includeInLayout = true;
+						_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = true;
+						//_theBox.statChange.visible = _theBox.statChange.includeInLayout = false;
+						
+						_theBox.viewOnly(true);
+					}else{
+						//if(int(obj.si_status)!=1)
+						_theBox.statChange.visible = _theBox.statChange.includeInLayout = false;
+						_theBox.viewOnly(false);
+					}
+				}
+			}
+			
+			
+			private function itemMouseOver(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color = AccessVars.instance().colBgColorOver;
+			}
+			private function itemMouseOut(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			
+			protected function cancel_clickHandler(event:MouseEvent):void
+			{
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.CHANGE_SALESINV_STATUS,{sqID:_data.sqID,pBox:this,stat:3})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+			}
+			
+			public function updateRenderer(stat:int):void{
+				_data.stat = stat
+				if (stat == 3){
+					btnCancel.visible = btnCancel.includeInLayout = false;
+					btnOpen.visible = btnOpen.includeInLayout = true;
+					lblStatus.visible = lblStatus.includeInLayout = false;
+				}else if (stat == 0){
+					btnCancel.visible = btnCancel.includeInLayout = true;
+					btnOpen.visible = btnOpen.includeInLayout = false;
+					lblStatus.visible = lblStatus.includeInLayout = false;
+				}else if (stat == 1){
+					btnCancel.visible = btnCancel.includeInLayout = false;
+					btnOpen.visible = btnOpen.includeInLayout = false;
+					lblStatus.visible = lblStatus.includeInLayout = true;
+					lblStatus.text = "Fully Served";
+				}else if (stat == 2){
+					btnCancel.visible = btnCancel.includeInLayout = false;
+					btnOpen.visible = btnOpen.includeInLayout = false;
+					lblStatus.visible = lblStatus.includeInLayout = true;
+					lblStatus.text = "Partially Served";
+				}
+			}
+			
+			protected function open_clickHandler(event:MouseEvent):void
+			{
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.CHANGE_SALESINV_STATUS,{sqID:_data.sqID,pBox:this,stat:0})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup id="hbCont" paddingBottom="3" paddingTop="3" width="100%" fontSize="14" >
+		<s:HGroup width="100%" height="100%" verticalAlign="middle" useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+			<s:Label id="txtSalesNo" width="25%" textAlign="center" />
+			<s:Label id="txtCustomer" width="50%" textAlign="center"/>
+			<s:Label id="txtDate" width="25%" textAlign="center" />
+		</s:HGroup>
+		<s:HGroup id="hbContStat" width="35%" height="100%" useHandCursor="true" buttonMode="true" verticalAlign="middle" 
+				  visible="false" includeInLayout="false" paddingRight="5">
+			<s:Button id="btnCancel" width="100%" label="Cancel" click="cancel_clickHandler(event)" visible="false" includeInLayout="false"/>
+			<s:Button id="btnOpen" width="100%" label="Open" click="open_clickHandler(event)" visible="false" includeInLayout="false"/>
+			<s:Label id="lblStatus" width="100%" fontSize="12" horizontalCenter="0" textAlign="center"/>
+		</s:HGroup>
+	</s:HGroup>
+	
+	
+</s:Group>

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" minWidth="1000" minHeight="500"
+		  xmlns:s="library://ns.adobe.com/flex/spark" paddingLeft="10" paddingRight="10"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.DataListEvent;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.renderer.WareDiscrepListRenderer;
+			import com.module.renderer.WareDiscrepRenderer;
+			import com.module.renderer.WareReceiptRenderer;
+			import com.module.views.panels.PopupPanel;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.events.PropertyChangeEvent;
+			import mx.managers.PopUpManager;
+			import mx.printing.FlexPrintJob;
+			import mx.printing.FlexPrintJobScaleType;
+			
+			import spark.components.Application;
+			import spark.events.GridEvent;
+			import spark.events.GridItemEditorEvent;
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			private var _totalQty:int = 0;
+			public var _tempData:Object;
+			public var _type:int = 0; 
+			public var _data:Object;
+			private var _fromUpdate:Boolean = false;
+			public var theOwner:Object;
+			public var tempWRID:String="";
+			public var isProcess:Boolean = false;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				dfDate.selectedDate = new Date(); 
+				if (!isProcess){
+					if (AccessVars.instance().remarks == null){
+						var log3:DataListEvent = new DataListEvent(DataListEvent.GET_REMARKS_LIST,{qBox:this})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+					}
+					
+				}else{
+					cont.visible = false;
+					hgWD.visible = hgWD.includeInLayout = false;
+					hgHeader.visible = hgHeader.includeInLayout = false;
+					hgProcessHeader.visible = hgProcessHeader.includeInLayout = true;
+					hgProcessWD.visible = hgProcessWD.includeInLayout = true;
+				}
+			}
+			
+			public function setDataProvider(arr:ArrayCollection,type:int):void{
+				if (type == 0){
+					
+				}else if (type == 1){					
+					//cmbDeliver.dataProvider = arr;
+					//cmbDeliver.selectedIndex = 0;
+				}else if (type == 3){
+					dg.dataProvider = arr;
+					if (isProcess)
+						btnPrintWR.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+				}else if (type == 4){
+					//cmbSupplier.dataProvider = arr;
+				}
+			}
+			
+						
+			private var _arrCol:ArrayCollection;
+			public function set dataCollection(arrCol:ArrayCollection):void{
+				_arrCol = arrCol
+				
+				if (dgSearch.numElements > 0){
+					dgSearch.removeAllElements();
+				}
+				
+				if (arrCol.length > 0){
+					var obj:Object;
+					if (!isProcess){
+						var itemUser:WareDiscrepRenderer;
+						for each (obj in arrCol){
+							itemUser = new WareDiscrepRenderer()
+							itemUser.data = obj;
+							itemUser.theBox = this
+							dgSearch.addElement(itemUser);
+						}
+					}else{
+						var itemWD:WareDiscrepListRenderer;
+						for each (obj in arrCol){
+							itemWD = new WareDiscrepListRenderer()
+							itemWD.data = obj;
+							itemWD.theBox = this
+							dgSearch.addElement(itemWD);
+						}
+					}
+				}
+			}
+			
+			
+			
+			
+			protected function btnAdd_keyUpHandler(event:KeyboardEvent):void
+			{
+				if(event.keyCode == Keyboard.ENTER)
+					(event.target as Button).dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+			}
+			
+			
+			
+			protected function CheckOutclickHandler(event:MouseEvent):void
+			{
+				/* for each (var item:Object in dg.dataProvider){
+					if (item.qtyRec==""){
+						Alert.show("Item No."+item.num+", Quantity received is empty","Quantity Received Empty");
+						return;
+					}else if (item.pkgNo == ""){
+						Alert.show("Item No."+item.num+", Package No. is empty","Package No. Empty");
+						return;
+					}else if (item.remarks == ""){
+						Alert.show("Item No."+item.num+", Remarks is empty","Remarks Empty");
+						return;
+					}
+				}
+				if (txtSupInvNo.text == ""){
+					Alert.show("Please type a Supplier Invoice No.","Supplier Invoice No. Empty");
+					return;
+				} */
+				
+				if (txtPrepBy.text == ""){
+					Alert.show("Please fill up the 'Prepared By' field","Field Empty");
+					return;
+				}
+				if (txtCheckBy.text == ""){
+					Alert.show("Please fill up the 'Checked By' field","Field Empty");
+					return;
+				}
+				var obj:Object = new Object();				
+				obj.whdID = _tempData.whdID;
+				obj.prepBy = txtPrepBy.text;
+				obj.checkBy = txtCheckBy.text;
+				obj.dateTrans = setDateFormat(dfDate.selectedDate);
+				obj.pBox = this;
+				 var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.EDIT_WH_DISCREPANCY,obj)
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2); 
+				
+				
+			}
+			
+			public function setDateFormat(d:Date):String{
+				var strDate:String="";
+				//strDate = String(d.month+1)+"/"+d.date+"/"+d.fullYear;
+				var mon:String = (d.month+1 < 10)?"0"+String(d.month+1):String(d.month+1);
+				var dat:String = (d.date < 10)?"0"+String(d.date):String(d.date);
+				strDate = d.fullYear+"-"+mon+"-"+dat;
+				return strDate;
+			}
+			
+			
+			
+			protected function printPrevWR():void
+			{
+				/*var printJob:FlexPrintJob = new FlexPrintJob();
+				if (printJob.start() != true) return;
+				printJob.addObject(cont, FlexPrintJobScaleType.SHOW_ALL); 
+				printJob.send();*/
+				var _printBox:PrintPrevBox = new PrintPrevBox();
+				_printBox.boxType = this;
+				_printBox.orderTypeID = 3;
+				_printBox.width = AccessVars.instance().mainApp.width-5;
+				_printBox.height = AccessVars.instance().mainApp.height-5;
+				PopUpManager.addPopUp(_printBox,this,true);
+			}
+			
+			public function clearFields(event:MouseEvent):void{
+				
+				txtBranch.text = "";
+				txtPONo.text = "[No PO Selected]";
+				txtWRNo.text = "[No WH Receipt Selected]";
+				txtWDNo.text = "";
+				dfDate.selectedDate = new Date();
+				
+				
+				dg.dataProvider = null;
+				txtPrepBy.text = "";
+				txtCheckBy.text = "";
+			}
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				_type = 1;
+				/* btnCheckOut.label = "Save WH Receipt";*/
+				btnSave.enabled = true;
+				btnPrintWR.visible = btnPrintWR.includeInLayout = true;
+				mainCont.enabled = true;
+			}			
+			
+			
+			protected function SearchClickHandler(event:MouseEvent):void
+			{			
+				if (!isProcess){
+					var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_WH_DISCREPANCY,{searchstr:txtSearchStr.text,condition:"",qBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				}else{
+					var popPnl:PopupPanel = new PopupPanel();
+					popPnl.width = searchWD.width;
+					//popPnl.height = undefined;
+					popPnl.popView = 2;
+					popPnl.mainID = "3";
+					popPnl.mainComp = this;
+					PopUpManager.addPopUp(popPnl,searchWD,true);
+					PopUpManager.centerPopUp(popPnl);
+				}
+			}
+						
+			
+			protected function dg_gridDoubleClickHandler(event:GridEvent):void
+			{
+				if (event.column.columnIndex == 6 || event.column.columnIndex == 5){
+					event.grid.dataGrid.startItemEditorSession(event.rowIndex, event.columnIndex);
+				}
+			}
+			
+			protected function dg_gridItemEditorSessionSave(event:GridItemEditorEvent):void
+			{
+				trace("dg_gridItemEditorSessionSave",DataGrid(event.target).selectedItem.pkgNo)
+				trace("dg_gridItemEditorSessionSave",DataGrid(event.target).selectedItem.qtyRec)
+			}
+			
+			
+			
+			protected function dg_gridClickHandler(event:GridEvent):void
+			{
+				trace("----------------------------");
+				trace("dg_gridClickHandler",dg.selectedItem.pkgNo);
+				trace("dg_gridClickHandler",dg.selectedItem.qtyRec);
+				trace("dg_gridClickHandler",dg.selectedItem.remarks);
+			}
+			
+			public function updateWDID(value:String):void{
+				txtWDNo.text = value;
+			}
+			
+			public function updateData():void{
+				if (_tempData && _tempData.purOrdID){
+					trace(_tempData.purOrdID)
+					txtPONo.addEventListener(MouseEvent.CLICK,showExistPO);
+					txtPONo.buttonMode = true;
+					txtPONo.useHandCursor = true;
+					txtPONo.setStyle("color","blue");
+				}
+				if (_tempData && _tempData.whrID){
+					trace(_tempData.whrID)
+					txtWRNo.addEventListener(MouseEvent.CLICK,showExistWR);
+					txtWRNo.buttonMode = true;
+					txtWRNo.useHandCursor = true;
+					txtWRNo.setStyle("color","blue");
+				}
+			}
+			private function showExistPO(event:MouseEvent):void{
+				var popPnl:PopupPanel = new PopupPanel();
+				popPnl.popView = 0;
+				popPnl.mainID = _tempData.purOrdID;
+				PopUpManager.addPopUp(popPnl,this,true);
+				PopUpManager.centerPopUp(popPnl);
+			}
+			private function showExistWR(event:MouseEvent):void{
+				var popPnl:PopupPanel = new PopupPanel();
+				popPnl.width = cont.width;
+				popPnl.height = cont.height-50;
+				popPnl.popView = 1
+				popPnl.mainID = _tempData.whrID;
+				PopUpManager.addPopUp(popPnl,this,true);
+				PopUpManager.centerPopUp(popPnl);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:NumberFormatter id="numFmttr" precision="2" useThousandsSeparator="true"  />
+	</fx:Declarations>
+	<!--<s:Label text="Purchase Order" fontWeight="bold" fontSize="18" fontStyle="italic"/> minWidth="320" maxWidth="350" -->
+	<s:HGroup id="searchWD" width="25%" height="100%" minWidth="300" maxWidth="350" paddingBottom="5" paddingTop="5">
+		<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+			<s:layout>
+				<s:VerticalLayout paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5"/>
+			</s:layout>
+			<s:borderStroke> 
+				<mx:SolidColorStroke 
+					color="{AccessVars.instance().borderStrokeColor}" 
+					weight="2"/> 
+			</s:borderStroke> 
+			<s:HGroup id="hgWD" width="100%" horizontalAlign="left" verticalAlign="middle" height="30">
+				<s:Label text="Search"/>
+				<s:TextInput prompt="[PO No./WR No./Supplier]" id="txtSearchStr" enter="SearchClickHandler(null)" width="90%"/>
+				<s:Button label="Search" click="SearchClickHandler(event)"/>
+			</s:HGroup>
+			<s:HGroup id="hgProcessWD" width="100%" horizontalAlign="center" verticalAlign="middle" height="30" paddingRight="5" visible="false" includeInLayout="false">
+				<s:Button label="Select Search Criteria " click="SearchClickHandler(event)" buttonMode="true" width="90%"/>				
+			</s:HGroup>
+			<s:HGroup id="hgHeader" width="100%" fontSize="14"  fontWeight="bold" gap="2">
+				<s:Label text="PO No." width="15%" height="100%" verticalAlign="middle" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+				<s:Label text="WR No." width="25%" height="100%" verticalAlign="middle" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+				<s:Label text="Supplier" width="35%" height="100%" verticalAlign="middle" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+				<s:Label text="Date" width="25%" height="100%" verticalAlign="middle" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+			</s:HGroup>
+			<s:HGroup id="hgProcessHeader" width="100%" fontSize="14"  fontWeight="bold" gap="2" visible="false" includeInLayout="false">
+				<s:Label text="WD No." width="25%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+				<s:Label text="Branch" width="45%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+				<s:Label text="Date" width="30%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+			</s:HGroup>
+			<s:Group width="100%" height="100%">
+				<s:Scroller width="100%" height="100%">
+					<s:VGroup id="dgSearch" gap="2" width="100%" height="100%" contentBackgroundAlpha="1" contentBackgroundColor="0xCCCCCC" clipAndEnableScrolling="true"/>
+				</s:Scroller>
+			</s:Group>
+		</s:BorderContainer>
+	</s:HGroup>
+	<s:VGroup id="cont" width="75%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:VGroup id="mainCont" width="100%" height="100%" enabled="false">
+			<s:BorderContainer width="100%" height="100%" fontSize="16" cornerRadius="10" borderStyle="inset" >
+				<s:borderStroke> 
+					<mx:SolidColorStroke 
+						color="{AccessVars.instance().borderStrokeColor}" 
+						weight="2"/> 
+				</s:borderStroke> 
+				<s:layout>
+					<s:HorizontalLayout paddingTop="5" paddingLeft="2" paddingRight="2" paddingBottom="5"/>
+				</s:layout>
+				<s:VGroup  width="45%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Branch" width="70" textAlign="right"/>
+						<s:TextInput id="txtBranch" width="100%" />
+					</s:HGroup>
+					<s:HGroup width="100%" height="100%" verticalAlign="middle">
+						<s:Label text="WR No." width="70" textAlign="right"/>
+						<s:Label id="txtWRNo" width="100%" fontSize="16" text="[No WH Receipt selected]"/>
+						<s:Label text="PO No." width="50" textAlign="right"/>
+						<s:Label id="txtPONo" width="100%" fontSize="16" text="[No PO selected]"/>
+					</s:HGroup>
+				</s:VGroup>
+				<s:VGroup  width="55%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Warehouse Discrepancy No." width="170" textAlign="right"/>
+						<s:TextInput id="txtWDNo" width="100%" editable="false"/>
+					</s:HGroup>	
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label width="170" text="Date" textAlign="right"/>
+						<mx:DateField id="dfDate" width="100%" showToday="true"/>
+					</s:HGroup>						
+				</s:VGroup>
+			</s:BorderContainer>
+			<s:Spacer height="5"/>
+			<s:DataGrid id="dg" width="100%" height="100%"  minHeight="250"  sortableColumns="false" fontSize="12" editable="false" >
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="40" dataField="num" headerText="No." editable="false"/>						
+						<s:GridColumn dataField="modelNo" headerText="Item / Model No." width="120"  editable="false">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="prodDesc" headerText="Description" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						
+						<s:GridColumn dataField="qty" headerText="Qty Order" width="75"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="center"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="qtyRec" headerText="Qty Rcv" width="70"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="center"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="diff" headerText="Over/Short" width="80"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">							
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="center"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="pkgNo" headerText="Pkg No." width="80"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="center"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="remarks" headerText="Remarks" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left" wordWrap="true" width="120"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						
+					</s:ArrayList>
+				</s:columns>
+			</s:DataGrid>
+			<s:HGroup width="100%" verticalAlign="middle" gap="10" paddingLeft="20">
+				<s:Label text="Prepared By" width="75" textAlign="right"/>
+				<s:TextInput id="txtPrepBy" width="200" styleName="required" valueCommit="{txtPrepBy.styleName = txtPrepBy.text==''?'required':''}"/>
+				<s:Spacer width="100"/>
+				<s:Label text="Checked By" width="75" textAlign="right"/>
+				<s:TextInput id="txtCheckBy" width="200" styleName="required" valueCommit="{txtCheckBy.styleName = txtCheckBy.text==''?'required':''}"/>
+			</s:HGroup>
+		</s:VGroup>		
+		<mx:HRule height="5" width="100%"/>
+		<s:HGroup id="hgControl" width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5"
+				  horizontalAlign="left" verticalAlign="top">						
+			<s:Button id="btnSave"  label="Save Discrepancy Report" click="CheckOutclickHandler(event)" enabled="false"/>
+			<s:Spacer width="100%"/>
+			<s:Button id="btnEdit"  label="Edit Discrepancy Report" click="editClickHandler(event)" enabled="false"/>
+			<s:Button id="btnPrintWR" label="View Discrepancy Report" click="printPrevWR()" visible="false" includeInLayout="false"/>
+			
+		</s:HGroup>
+	</s:VGroup>
+</s:HGroup>

@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="creationCompleteHandler(event)"
+		  xmlns:s="library://ns.adobe.com/flex/spark" paddingLeft="10" paddingRight="10"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.UserEvent;
+			import com.module.renderer.SupplierRenderer;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			
+			public var _data:Object;
+			public var theOwner:Object;
+			/** 0=add 1=edit**/
+			public var _type:int = 0; 
+			private var _fromUpdate:Boolean = false;
+			
+			public var arrTerm:ArrayCollection = new ArrayCollection([
+				{name:"PRE-PAID",termId:0},{name:"CASH",termId:1},{name:"COD",termId:2},
+				{name:"7-DAYS",termId:3},{name:"15-DAYS",termId:4},{name:"30-DAYS",termId:5},
+				{name:"45-DAYS",termId:6},{name:"60-DAYS",termId:7},{name:"Special",termId:8}]);
+			
+			public var arrBranch:ArrayCollection = new ArrayCollection([
+				{name:"AESC Branch",branchId:1}])
+			
+			public function clearFields(event:MouseEvent):void
+			{
+				if (_fromUpdate){
+					_fromUpdate = false;
+					_data.supCode = txtSupCode.text;
+					_data.compName = txtCompName.text;
+					_data.address = txtAdd.text;
+					_data.tin = txtTin.text;
+					_data.creditLine = txtCreditLine.text;
+					_data.term = cmbTerm.selectedItem.termId;
+					_data.local = cbLocal.selected;
+					
+					_data.conPerson = txtConName.text;
+					_data.desig = txtDesig.text;
+					_data.mobileNum = txtMobile.text;
+					_data.phoneNum = txtPhone.text+"|"+txtExt.text;
+					_data.email = txtEmail.text;
+					_data.web = txtWeb.text;
+					
+					(theOwner as SupplierRenderer).data = _data;
+					(theOwner as SupplierRenderer).creationCompleteHandler(null);
+					return;
+				}
+				
+				if (_type == 0){
+					txtSupCode.text = "";
+					txtCompName.text = "";
+					txtAdd.text = "";
+					txtCreditLine.text = "0.00";
+					cmbTerm.selectedIndex = 0;
+					cbLocal.selected = false;
+					txtConName.text = "";
+					txtDesig.text = "";
+					txtEmail.text = "";
+					txtTin.text = "";
+					txtExt.text = "";
+					txtWeb.text = "";
+					txtMobile.text = "";
+					txtPhone.text = "";
+					
+				}else{
+					Alert.show("Are you sure to reset to default value?","Confirm Reset to Default",Alert.YES|Alert.NO,null,resetDefCloseHandler)
+				}
+				
+			}
+			public function setSelectedItem(arr:ArrayCollection,field:String,val:int):int{
+				var i:int=0
+				for each(var item:Object in arr){
+					if (item[field] == val)
+						return i;
+					i++;
+				}
+				return 0;
+			}
+			
+			private function resetDefCloseHandler(evt:CloseEvent):void{
+				if (evt.detail == Alert.YES){
+					txtSupCode.text = _data.supCode;
+					txtCompName.text = _data.compName;
+					//cmbOpenBranch.selectedIndex = setSelectedItem(arrBranch,"branchId",_data.branchId);
+					txtAdd.text = _data.address;
+					txtTin.text = _data.tin;
+					txtCreditLine.text = _data.creditLine;
+					cmbTerm.selectedIndex = setSelectedItem(AccessVars.instance().arrTerm,"termId",_data.term);
+					cbLocal.selected = (_data.local as Boolean);
+					
+					txtConName.text = _data.conPerson;
+					txtDesig.text = _data.desig;
+					txtMobile.text = _data.mobileNum;
+					txtPhone.text = String(_data.phoneNum).split("|")[0];
+					txtExt.text = String(_data.phoneNum).split("|")[1];
+					txtEmail.text = _data.email;
+					txtWeb.text = _data.web;
+				}
+			}
+			
+			private function UserErrorTrap():String{
+				var strRet:String = ""
+				
+				if (txtConName.text == "")
+					strRet +="- Contact Person field is empty \r";
+				if (txtCompName.text == "")
+					strRet +="- Account No. field is empty \r";
+				/* if (txtmname.text == "")
+					strRet +="- Middle Name field is empty \r";
+				if (txtBname.text == "")
+					strRet +="- Business Name field is empty \r"; */
+				
+				return strRet;
+			}
+			
+			protected function saveClickHandler(event:MouseEvent):void
+			{
+				var strErr:String = UserErrorTrap();
+				if (strErr != ""){
+					Alert.show(strErr,"Error Summary:");
+					return;
+				}
+				
+				var obj:Object = {}
+				obj.supCode = txtSupCode.text;
+				obj.compName = txtCompName.text;
+				obj.address = txtAdd.text;
+				obj.tin = txtTin.text;
+				obj.creditLine = txtCreditLine.text;
+				obj.term = cmbTerm.selectedItem.termId;
+				obj.local = cbLocal.selected;
+				obj.inactive = false;
+				
+				obj.conPerson = txtConName.text;
+				obj.desig = txtDesig.text;
+				obj.mobileNum = txtMobile.text;
+				obj.phoneNum = txtPhone.text+"|"+txtExt.text;
+				obj.email = txtEmail.text;
+				obj.web = txtWeb.text;
+				
+				
+				hgControl.enabled = false;
+				if (_type == 0){
+					obj.qBox = this;
+					var addUser:UserEvent = new UserEvent(UserEvent.ADD_SUPPLIER,obj);
+					CairngormEventDispatcher.getInstance().dispatchEvent(addUser);
+				}else{
+					obj.supID = _data.supID;
+					obj.qBox = this;
+					_fromUpdate = true;
+					var editUser:UserEvent = new UserEvent(UserEvent.EDIT_SUPPLIER,obj);
+					CairngormEventDispatcher.getInstance().dispatchEvent(editUser);
+				}
+			}
+			
+			/*private function closeConfirmHandler(evt:CloseEvent):void{
+				Alert.yesLabel = "Yes";
+				Alert.noLabel = "No";
+				Alert.buttonWidth = 65;
+				if (evt.detail == Alert.YES){
+					_type = 0;
+					_data = null;
+					saveClickHandler(new MouseEvent(MouseEvent.CLICK));
+				}else if (evt.detail == Alert.NO){
+					_type = 1;
+					btnSave.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+				}
+			}*/
+			
+			protected function SearchClickHandler(event:MouseEvent):void
+			{
+				_type = 0;
+				_fromUpdate = false;
+				clearFields(null);
+				btnSave.visible = btnSave.includeInLayout = false;
+				btnNewCus.visible = btnNewCus.includeInLayout = true;
+				mainCont.enabled = false;
+				btnEdit.visible = btnEdit.includeInLayout = false;
+				btnClear.visible = btnClear.includeInLayout = false;
+				var log:UserEvent = new UserEvent(UserEvent.SEARCH_SUPPLIER,{searchstr:txtSearchStr.text,qBox:this})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log);
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				btnSave.addEventListener(MouseEvent.CLICK,saveClickHandler);
+				btnClear.addEventListener(MouseEvent.CLICK,clearFields);
+			}
+			
+			private var _arrCol:ArrayCollection;
+			public function set dataCollection(arrCol:ArrayCollection):void{
+				_arrCol = arrCol
+					
+				if (dgSearch.numElements > 0){
+					dgSearch.removeAllElements();
+				}
+				
+				if (arrCol.length > 0){
+					var itemUser:SupplierRenderer;
+					var i:int=0;
+					for each (var obj:Object in arrCol){
+						itemUser = new SupplierRenderer()
+						if (i % 2 != 0)
+							itemUser._bgColor = 0xFFFFFF;
+						itemUser.data = obj;
+						itemUser.theBox = this
+						dgSearch.addElement(itemUser);
+						i++;
+					}
+				}
+			}
+			
+			protected function newUserClickHandler(event:MouseEvent):void
+			{
+				_type = 0;
+				//hasSelectedItem = true;
+				mainCont.enabled = true;
+				btnSave.label = "Save Supplier";
+				btnSave.visible = btnSave.includeInLayout = true;
+				btnEdit.visible = btnEdit.includeInLayout = false;
+				btnClear.visible = btnClear.includeInLayout = false
+				clearFields(null);
+				txtSupCode.setFocus();
+				//saveClickHandler(new MouseEvent(MouseEvent.CLICK));
+			}
+			
+			protected function editClickHander(event:MouseEvent):void
+			{
+				_type = 1;
+				mainCont.enabled = true;
+				btnSave.label = "Save Changes";
+				btnSave.visible = btnSave.includeInLayout = true;
+				btnEdit.visible = btnEdit.includeInLayout = false;
+				btnClear.visible = btnClear.includeInLayout = true;
+				txtSupCode.setFocus();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		
+	</fx:Declarations>
+	<!--<s:Label text="Customer" fontWeight="bold" fontSize="18" fontStyle="italic"/>-->
+	<s:HGroup width="25%" height="100%" paddingBottom="5" paddingTop="5">
+		<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+			<s:layout>
+				<s:VerticalLayout paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5"/>
+			</s:layout>
+			<s:borderStroke> 
+				<mx:SolidColorStroke 
+					color="{AccessVars.instance().borderStrokeColor}" 
+					weight="2"/> 
+			</s:borderStroke> 
+			<s:HGroup width="100%" horizontalAlign="left" verticalAlign="middle" height="30">
+				<s:Label text="Search:"/>
+				<s:TextInput prompt="[Supplier Code/Name]" id="txtSearchStr" enter="SearchClickHandler(null)" width="90%"/>
+				<s:Button label="Search" click="SearchClickHandler(event)"/>
+			</s:HGroup>
+			<s:HGroup width="100%" fontSize="14"  fontWeight="bold" gap="2">
+				<s:Label text="Supplier Code." width="35%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+				<!--<s:Label text="Business Name" width="35%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>-->
+				<!--<s:Label text="Contact Info" width="50%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>-->
+				<s:Label text="Supplier Name" width="65%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+			</s:HGroup>
+			<s:Group width="100%" height="100%">
+				<s:Scroller width="100%" height="100%">
+					<s:VGroup id="dgSearch" gap="2" width="100%" height="100%" contentBackgroundAlpha="1" contentBackgroundColor="0xCCCCCC" clipAndEnableScrolling="true"/>
+				</s:Scroller>
+			</s:Group>
+			<mx:HRule width="100%" height="3"/>
+			<s:HGroup width="100%" gap="5" verticalAlign="middle" fontSize="14" >
+				<s:Label text="Total Supplier: "/>
+				<s:Label id="totCount" text="0"/>
+			</s:HGroup>
+		</s:BorderContainer>
+	</s:HGroup>	
+	<s:HGroup  width="80%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+			<s:layout>
+				<s:VerticalLayout paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5"/>
+			</s:layout>
+			<s:borderStroke> 
+				<mx:SolidColorStroke 
+					color="{AccessVars.instance().borderStrokeColor}" 
+					weight="2"/> 
+			</s:borderStroke> 
+			<s:HGroup id="mainCont" width="100%" height="100%"  enabled="false">
+				<s:VGroup  width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="10" paddingRight="10" gap="10">
+					<s:Label text="Business Information" fontSize="16"/>
+					<mx:HRule width="100%" height="2"/>
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Supplier Code" width="95" textAlign="right"/>
+						<s:TextInput id="txtSupCode" width="100%" restrict="0-9\-"/>
+					</s:HGroup>
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Company Name" width="95" textAlign="right"/>
+						<s:TextInput id="txtCompName" width="100%"/>
+					</s:HGroup>					
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Address" width="95" textAlign="right"/>
+						<s:TextArea id="txtAdd" width="100%" height="50"/>
+					</s:HGroup>
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Term" width="95" textAlign="right"/>
+						<s:DropDownList id="cmbTerm" selectedIndex="0" labelField="name" dataProvider="{AccessVars.instance().arrTerm}" width="100%"/>
+						<s:CheckBox label="Local" id="cbLocal" selected="false"/>
+					</s:HGroup>
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="TIN No." width="95" textAlign="right"/>
+						<s:TextInput id="txtTin" width="100%" restrict="0-9\-"/>
+						<s:Label text="Credit Line" width="90"/>
+						<s:TextInput id="txtCreditLine" width="100%" text="0.00" restrict="0-9." textAlign="right"/>
+					</s:HGroup>
+					
+				</s:VGroup>
+				<s:VGroup  width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="10" paddingRight="10" gap="10">
+					<s:Label text="Contact Information" fontSize="16"/>
+					<mx:HRule width="100%" height="2"/>
+					<s:VGroup  width="100%">
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Contact Person" width="100" textAlign="right"/>
+							<s:TextInput id="txtConName" width="100%"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Designation" width="100" textAlign="right"/>
+							<s:TextInput id="txtDesig" width="100%"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label width="100" text="Phone" textAlign="right"/>
+							<s:TextInput id="txtPhone" width="100%" restrict="0-9\-()"/>
+							<s:Label text="Ext:" width="30" textAlign="right"/>
+							<s:TextInput id="txtExt" width="50" restrict="0-9"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Mobile" width="100" textAlign="right"/>
+							<s:TextInput id="txtMobile" width="100%" restrict="0-9\-"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle" >
+							<s:Label text="eMail" width="100" textAlign="right"/>
+							<s:TextInput id="txtEmail" width="100%" restrict="a-zA-Z0-9@._"/>
+						</s:HGroup>
+						<s:HGroup width="100%" verticalAlign="middle" >
+							<s:Label text="Website" width="100" textAlign="right"/>
+							<s:TextInput id="txtWeb" width="100%"/>
+						</s:HGroup>
+					</s:VGroup>
+				</s:VGroup>
+			</s:HGroup>			
+			<mx:HRule width="100%" height="4" chromeColor="0x000000"/>
+			
+			<s:HGroup id="hgControl" width="100%" height="50" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5"
+					  horizontalAlign="left" verticalAlign="middle">
+				<s:Button id="btnSave" label="Save Supplier" visible="false" includeInLayout="false"/>
+				<s:Spacer width="100%"/>
+				<s:Button id="btnNewCus" label="New Supplier" click="newUserClickHandler(event)"/>
+				<s:Button id="btnEdit" label="Edit Supplier Info" click="editClickHander(event)" visible="false" includeInLayout="false"/>					
+				<s:Button id="btnClear" label="Cancel Changes" visible="false" includeInLayout="false"/>
+			</s:HGroup>
+		</s:BorderContainer>	
+	</s:HGroup>
+	
+</s:HGroup>

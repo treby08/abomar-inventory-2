@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="65" creationComplete="creationCompleteHandler(event)"
+		 currentStateChange="currentStateChangeHandler(event)" mouseOver="{this.currentState='State1'}" mouseOut="{this.currentState='State2'}">
+	<s:layout>
+		<s:HorizontalLayout/>
+	</s:layout>
+	<s:states>
+		<s:State name="State1" />
+		<s:State name="State2" />
+	</s:states>
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.events.StateChangeEvent;
+			
+			private var _dataObj:Object;
+			private var _navMenu:Object;
+			public function set dataObj(value:Object):void{
+				_dataObj = value;
+			}
+			public function set navMenu(value:Object):void{
+				_navMenu = value;
+			}
+			public function get navMenu():Object{
+				return _navMenu;
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				if (_dataObj.hasOwnProperty("img")){
+					itemImg.source = _dataObj.img;
+				}else{
+					itemImg.visible = itemImg.includeInLayout = false;
+					spr.visible=spr.includeInLayout=true;
+				}
+				
+				if (_dataObj.hasOwnProperty("name")){
+					itemName.text = _dataObj.name;
+				}
+					
+			}
+			
+			protected function currentStateChangeHandler(event:StateChangeEvent):void
+			{
+				// TODO Auto-generated method stub
+				if(bc){
+					bc.setStyle('rollOverEffect',animateColorON);
+					bc.setStyle('rollOutEffect',animateColorOFF);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:AnimateColor id="animateColorON" colorPropertyName="backgroundColor" colorFrom="#FFFFFF" colorTo="#7cb85e" duration="100"/>
+		<s:AnimateColor id="animateColorOFF" colorPropertyName="backgroundColor" colorFrom="#7cb85e" colorTo="#FFFFFF" duration="300"/>
+	</fx:Declarations>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		#bc{
+			borderSides: "bottom";
+			borderWeight: 2;
+		}
+	</fx:Style>
+	<mx:Canvas id="bc" width="100%" height="100%" buttonMode="true" useHandCursor="true">
+		<s:HGroup width="100%" height="100%">
+			<s:Image id="itemImg" height="100%" width="50"/>
+			<s:Spacer id="spr" width="10" includeInLayout="false" visible="false"/>
+			<s:Label id="itemName" text="Name" width="100%" height="100%" verticalAlign="middle" fontSize="16" fontWeight="bold"/>
+		</s:HGroup>
+		
+	</mx:Canvas> 
+</s:Group>

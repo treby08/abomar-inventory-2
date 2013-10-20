@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:GridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" horizontalCenter="0"
+					xmlns:s="library://ns.adobe.com/flex/spark" width="20" height="22"
+					xmlns:mx="library://ns.adobe.com/flex/mx" clipAndEnableScrolling="true">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;			
+			import spark.components.DataGrid;
+			
+			override public function prepare(hasBeenRecycled:Boolean):void {
+				if (cb && data){
+					if (data.isSelected =="1")
+						cb.selected = true;
+					else if (data.isSelected =="0")
+						cb.selected = false;
+				}
+			}
+			protected function removeclickHandler(event:MouseEvent):void
+			{
+				var dg:DataGrid = (parent.parent.parent.parent.parent.parent.parent.parent.parent as DataGrid);
+				var obj:Object = (dg.dataProvider as ArrayCollection).getItemAt(dg.selectedIndex);
+				/*check for Purchase Order module if parenting is still proper*/
+				Object(dg.parent.parent.parent).reComputeHandler(obj,(event.target as CheckBox).selected);
+				//Alert.show("Are you sure to remove this item?","Remove Item Confirmation",Alert.YES|Alert.NO,null,closeRemClickHandler);
+			}
+			
+		]]>
+	</fx:Script>
+	<s:HGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<s:CheckBox id="cb" toolTip="Include Item" useHandCursor="true" buttonMode="true" selected="true" click="removeclickHandler(event)"/>
+	</s:HGroup>	
+</s:GridItemRenderer>

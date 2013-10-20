@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.UserEvent;
+			import com.module.views.UserPanel;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			public function set data(value:Object):void{
+				_data = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtName.text = _data.name;
+				txtUser.text = _data.user;
+				txtUserType.text = _data.userTypeName;
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				var userPanl:UserPanel = new UserPanel();
+				userPanl.title = "Edit User";
+				userPanl._type = 1;
+				userPanl.data = _data;
+				userPanl.theOwner = this;
+				PopUpManager.addPopUp(userPanl,AccessVars.instance().mainApp,true);
+				PopUpManager.centerPopUp(userPanl);
+			}
+			
+			protected function deleteClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to delete \""+_data.user+"\" user?","Delete User",Alert.YES|Alert.NO,null,closeHandler);
+			}
+			
+			private function closeHandler(evt:CloseEvent):void
+			{
+				if(evt.detail == Alert.YES){
+					var delEvent:UserEvent = new UserEvent(UserEvent.DELETE_USER,{usersID:_data.usersID,upnl:this});
+					CairngormEventDispatcher.getInstance().dispatchEvent(delEvent);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup paddingBottom="3" paddingTop="3" width="100%" fontSize="14" verticalAlign="middle" mouseOver="{sFill.color = AccessVars.instance().colBgColorOver}" mouseOut="{sFill.color=AccessVars.instance().colBgColor}"
+			  useHandCursor="true" buttonMode="true" doubleClickEnabled="true" doubleClick="editClickHandler(event)">
+		<s:Label id="txtName" width="200" textAlign="center"/>
+		<s:Label id="txtUser" width="150" textAlign="center"/>
+		<s:Label id="txtUserType" width="150" textAlign="center"/>
+		<s:HGroup width="100%" horizontalAlign="center">
+			<s:Button label="Edit" click="editClickHandler(event)"  useHandCursor="true" buttonMode="true"/>
+			<s:Button label="Delete" click="deleteClickHandler(event)"  useHandCursor="true" buttonMode="true"/>
+		</s:HGroup>
+	</s:HGroup>
+	
+</s:Group>

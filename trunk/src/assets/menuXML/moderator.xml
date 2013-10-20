@@ -1,0 +1,6 @@
+<root>
+	<main name="Customers" code="cus_lst"/>	
+	<main name="Products" code="inv_pl" icon="assets/icons/icon_inv.png"/>
+	<main name="Suppliers" code="supplier"/>
+	<main name="Branches" code="branch"/>
+</root>
