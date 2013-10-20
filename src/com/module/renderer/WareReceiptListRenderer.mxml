@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.UserPanel;
+			import com.module.views.WareReceiptBox;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _isSelected:Boolean = false;
+			private var _theBox:WareReceiptBox;
+			public var isDispatch:Boolean = false;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			public function get data():Object{
+				return _data;
+			}
+			
+			public function set isSelected(value:Boolean):void{
+				_isSelected = value
+				if (value)
+					sFill.color = AccessVars.instance().colBgColorOver
+				else
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			public function get isSelected():Boolean{
+				return _isSelected;
+			}
+			
+			public function set theBox(value:WareReceiptBox):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				var arr:Array = String(_data.dateTrans).split("-");
+				var yr:String = String( new Date(arr[0],(arr[1]-1),arr[2]).getFullYear());
+				txtWRNo.text = updateWRID(_data);
+				txtBranch.text = _data.branchName;
+				txtDate.text =String(_data.dateTrans);
+				hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				//hbCont.removeEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+				//hbCont.removeEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				for (var i:int =0; i < _theBox.dgSearch.numElements; i++){
+					(_theBox.dgSearch.getElementAt(i) as WareReceiptListRenderer).isSelected = false;
+				}
+				isSelected = true;
+				
+				isDispatch = true;
+				_theBox.theOwner = this;
+				_theBox.clearFields(null);
+				/*/*arrObj.whrID = listXML.@whrID;
+				arrObj.whrID_label = listXML.@whrID_label;
+				arrObj.branch = listXML.@branch;
+				arrObj.poID_label = listXML.@poID_label;
+				arrObj.whr_supInvNo = obj.@whr_supInvNo;			
+				arrObj.whr_supInvDate = obj.@whr_supInvDate;			
+				arrObj.whr_checkedBy = obj.@whr_checkedBy;			
+				arrObj.whr_preparedBy = obj.@whr_preparedBy;
+				arrObj.dateTrans = listXML.@dateTrans;*/
+				
+				var obj:Object = _theBox._tempData = _data;
+				_theBox.txtWRNo.text = updateWRID(_data);
+				//_theBox.txtInvoice.text = obj.invTo;
+				//_theBox.txtAppBy.text = obj.approvedBy;
+				//_theBox.txtReqNo.text = obj.reqNo;
+				var arr:Array = String(_data.dateTrans).split("-");
+				_theBox.dfDate.selectedDate = new Date(arr[0],(arr[1]-1),arr[2]);
+				_theBox.txtBranch.text = _data.branch;
+				_theBox.txtPONo.text = _data.poID_label; 
+				_theBox.txtSupInvNo.text = _data.whr_supInvNo;
+				arr  = String(_data.whr_supInvDate).split("-");
+				_theBox.dfInvDate.selectedDate = new Date(arr[0],(arr[1]-1),arr[2]);
+				_theBox.txtPrepBy.text = _data.whr_preparedBy;
+				_theBox.txtCheckBy.text = _data.whr_checkedBy;
+				
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_WH_DISCREPANCY_DETAILS,{whrID:obj.whrID,qBox:_theBox,itemRen:this,condition:""})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				
+				
+				_theBox.mainCont.enabled = true;
+				_theBox.btnView.visible = _theBox.btnView.includeInLayout = true;
+			}			
+			
+			public function updateWRID(_data:Object):String{
+				var yr:String = String(_data.dateTrans).split("-")[0];
+				return "WR-"+_data.bCode+"-"+yr.substr(2)+"-"+_data.whrID_label;
+			}
+			
+			
+			private function itemMouseOver(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color = AccessVars.instance().colBgColorOver;
+				/*if (!hbCont.hasEventListener(MouseEvent.MOUSE_OUT))
+					hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);*/
+			}
+			private function itemMouseOut(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color=AccessVars.instance().colBgColor;
+				/*if (!hbCont.hasEventListener(MouseEvent.MOUSE_OVER))
+					hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);*/
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup id="hbCont" paddingBottom="3" paddingTop="3" width="100%" height="30" fontSize="14" verticalAlign="middle" 
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtWRNo" width="35%" textAlign="center"/>
+		<s:Label id="txtBranch" width="40%" textAlign="center"/>
+		<s:Label id="txtDate" width="25%" textAlign="center"/>
+	</s:HGroup>
+	
+</s:Group>

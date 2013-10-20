@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.UserEvent;
+			import com.module.views.SupplierBox;
+			import com.module.views.UserPanel;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _theBox:SupplierBox;
+			[Bindable]
+			public var _bgColor:uint = AccessVars.instance().colBgColor;
+			
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			
+			public function set theBox(value:SupplierBox):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtName.text = _data.compName;
+				txtAcct.text = _data.supCode;
+				/* txtBname.text = _data.businame;
+				var contList:String = "";
+				contList = (_data.pNum != "")?"Tel No. "+_data.pNum+"\r":"";
+				contList += (_data.mNum != "")?"Cell No. "+_data.mNum+"\r":"";
+				contList += (_data.bPhoneNum != "")?"Busi Tel No. "+_data.bPhoneNum+"\r":"";
+				contList += (_data.bMobileNum != "")?"Busi Cell No. "+_data.bMobileNum+"\r":"";
+				contList += (_data.email != "")?"Email Address: "+_data.email:"";
+				txtContInfo.text = contList; */
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				
+				_theBox.txtSupCode.text = _data.supCode;
+				_theBox.txtCompName.text = _data.compName;
+				//_theBox.cmbOpenBranch.selectedIndex = _theBox.setSelectedItem(_theBox.arrBranch,"branchId",_data.branchId);
+				_theBox.txtAdd.text = _data.address;
+				_theBox.txtTin.text = _data.tin;
+				_theBox.txtCreditLine.text = _data.creditLine;
+				_theBox.cmbTerm.selectedIndex = _theBox.setSelectedItem(_theBox.arrTerm,"termId",_data.term);
+				//trace("_data.inactive:",_data.inactive)
+				_theBox.cbLocal.selected = (_data.local as Boolean);
+				
+				_theBox.txtConName.text = _data.conPerson;
+				_theBox.txtDesig.text = _data.desig;
+				_theBox.txtMobile.text = _data.mNum;
+				_theBox.txtPhone.text = String(_data.pNum).split("|")[0];
+				_theBox.txtExt.text = String(_data.pNum).split("|")[1];
+				_theBox.txtEmail.text = _data.email;
+				_theBox.txtWeb.text = _data.web;
+				
+				_theBox._type = 1;
+				_theBox._data = _data;
+				_theBox.btnSave.visible = _theBox.btnSave.includeInLayout = false;
+				_theBox.btnNewCus.visible = _theBox.btnNewCus.includeInLayout = true;
+				_theBox.mainCont.enabled = false;
+				_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = true;
+				_theBox.btnClear.visible = _theBox.btnClear.includeInLayout = false;
+				//_theBox.btnNewUser.visible = true;
+				/* _theBox.btnSave.label = "Update";
+				_theBox.btnSave.visible = true;
+				_theBox.btnClear.label = "Reset to Default"; */
+				_theBox.theOwner = this;
+			}
+			
+			protected function deleteClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to delete \""+_data.supCode +" - "+_data.compName +"\" as Supplier?","Delete Supplier",Alert.YES|Alert.NO,null,closeHandler);
+			}
+			
+			private function closeHandler(evt:CloseEvent):void
+			{
+				if(evt.detail == Alert.YES){
+					var delEvent:UserEvent = new UserEvent(UserEvent.DELETE_CUSTOMER,{custID:_data.custID,upnl:this});
+					CairngormEventDispatcher.getInstance().dispatchEvent(delEvent);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{_bgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup paddingBottom="3" paddingTop="3" width="100%" fontSize="15" verticalAlign="middle" mouseOver="{sFill.color = AccessVars.instance().colBgColorOver}" mouseOut="{sFill.color=_bgColor}"
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtAcct" width="35%" textAlign="center"/> 
+		<s:Label id="txtName" width="65%" textAlign="center"/> 
+		<!--<s:HGroup width="30%" horizontalAlign="center" paddingRight="5">		
+			<s:Label text="Deactivate" click="deleteClickHandler(event)"  useHandCursor="true" buttonMode="true" color="0"/>
+		</s:HGroup>-->
+	</s:HGroup>
+	
+</s:Group>

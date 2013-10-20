@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.views.ProductBox;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _theBox:Object;
+			public function set data(value:Object):void{
+				_data = value
+			}
+			
+			public function set theBox(value:Object):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtItemCode.text = _data.pCode;
+				txtUnitPrice.text = _data.price; 
+				txtStock.text = _data.stockCnt; 
+				var contList:String = "";
+				contList = (_data.pName != "")?"<B>"+_data.pName+"</B>\r":"";
+				contList += (_data.pDesc != "")?" -- "+_data.pDesc+"":"";
+				txtProduct.htmlText = contList;
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				
+				_theBox.txtProdCode.text = _data.pCode;
+				_theBox.txtProdName.text = _data.pName;
+				_theBox.txtDesc.text = _data.pDesc;
+				_theBox.txtImagePath.text = _data.imgPath;
+				_theBox.txtStock.text = _data.stockCnt;
+				_theBox.txtPrice.text = _data.price;
+				_theBox.txtSupplier.text = _data.supplier;
+				_theBox.txtWeight.text = _data.weight;
+				_theBox.txtSize.text = _data.size;
+				_theBox.txtSubNum.text = _data.subNum;
+				_theBox.txtComModUse.text = _data.comModUse;
+				
+				_theBox._type = 1;
+				_theBox._data = _data;
+				//_theBox.btnNewProd.visible = true;
+				_theBox.btnSave.label = "Update";
+				_theBox.btnSave.visible = true;
+				_theBox.btnClear.label = "Reset to Default";
+				_theBox.owner = this;
+				_theBox.showHide(true);
+			}
+			
+			protected function deleteClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to delete \""+_data.pCode +" - "+_data.pName +"\" as Product?","Delete Product",Alert.YES|Alert.NO,null,closeHandler);
+			}
+			
+			private function closeHandler(evt:CloseEvent):void
+			{
+				if(evt.detail == Alert.YES){
+					var delEvent:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.DELETE_PRODUCT,{prodID:_data.prodID,ppnl:this});
+					CairngormEventDispatcher.getInstance().dispatchEvent(delEvent);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup paddingBottom="3" paddingTop="3" width="100%" fontSize="14" verticalAlign="middle" mouseOver="{sFill.color = AccessVars.instance().colBgColorOver}" mouseOut="{sFill.color=AccessVars.instance().colBgColor}"
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtItemCode" width="15%" textAlign="left" paddingLeft="15"/>
+		<mx:Text id="txtProduct" width="40%" paddingLeft="15" selectable="false"/>
+		<s:Label id="txtUnitPrice" width="15%" textAlign="right" paddingRight="10"/>
+		<s:Label id="txtStock" width="10%" textAlign="center"/>
+		<s:HGroup width="20%" horizontalAlign="center">
+			<!--<s:Button label="Edit" click="editClickHandler(event)"  useHandCursor="true" buttonMode="true"/>-->
+			<s:Button label="Delete" click="deleteClickHandler(event)"  useHandCursor="true" buttonMode="true"/>
+		</s:HGroup>
+	</s:HGroup>
+	
+</s:Group>

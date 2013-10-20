@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.UserPanel;
+			import com.module.views.WareDiscrepancyBox;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _isSelected:Boolean = false;
+			private var _theBox:WareDiscrepancyBox;
+			public var isDispatch:Boolean = false;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			public function get data():Object{
+				return _data;
+			}
+			
+			public function set isSelected(value:Boolean):void{
+				_isSelected = value
+				if (value)
+					sFill.color = AccessVars.instance().colBgColorOver
+				else
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			public function get isSelected():Boolean{
+				return _isSelected;
+			}
+			
+			public function set theBox(value:WareDiscrepancyBox):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				trace (_data.dateTrans);
+				txtWDNo.text = _data.whdID_label;
+				txtBranch.text = _data.bCode+ " - "+_data.bLocation;
+				txtDate.text =String(_data.dateTrans);
+				hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+			}
+			
+			public function zeroPad(number:int, width:int):String {
+				var ret:String = ""+number;
+				while( ret.length < width )
+					ret="0" + ret;
+				return ret;
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				for (var i:int =0; i < _theBox.dgSearch.numElements; i++){
+					(_theBox.dgSearch.getElementAt(i) as WareDiscrepListRenderer).isSelected = false;
+				}
+				isSelected = true;
+				
+				isDispatch = true;
+				_theBox.theOwner = this;
+				_theBox.clearFields(null);
+				/*
+				<item whdID=\"".$row['whdID']."\" whrID=\"".$row['whd_whrID']."\" whrID_label=\"".number_pad_req($row['whd_whrID'])."\" 
+				whr_purOrdID=\"".$row['whr_purOrdID']."\" whr_branchID=\"".$row['whr_branchID']."\" bCode=\"".$row['bCode']."\" 
+				bLocation=\"".$row['bLocation']."\" dateTrans=\"".$row['dateTrans']."\" branchPNum=\"".$row['branchPNum']."\" 
+				branchMNum=\"".$row['branchMNum']."\" supAddress=\"".$row['supAddress']."\" supPhoneNum=\"".$row['supPhoneNum']."\" 
+				supMobileNum=\"".$row['supMobileNum']."\" branchAdd=\"".$row['branchAdd']."\" whd_prepBy=\"".$row['whd_prepBy']."\" 
+				whd_checkBy=\"".$row['whd_checkBy']."\" whdID_label=\"".number_pad_req($row['whdID'])."\"/> 
+				*/
+				var obj:Object  = _theBox._tempData = _data;
+				_theBox.txtPONo.text = zeroPad(obj.whr_purOrdID,5);
+				var arr:Array = String(_data.dateTrans).split("-");
+				_theBox.dfDate.selectedDate = new Date(arr[0],(arr[1]-1),arr[2])
+				_theBox.txtWRNo.text = updateWRID(_data.whrID_label);
+				_theBox.txtWDNo.text = _data.whdID_label;
+				_theBox.txtBranch.text = obj.bCode+ " - "+obj.bLocation ;
+				_theBox.updateData();
+				_theBox.txtPrepBy.text = obj.whd_prepBy;
+				_theBox.txtCheckBy.text = obj.whd_checkBy;
+				
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_WH_DISCREPANCY_DETAILS,{whrID:obj.whrID,qBox:_theBox,itemRen:this,condition:""})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				
+				/*
+				_theBox.mainCont.enabled = false;
+				_theBox.btnEdit.enabled = true;
+				
+				_theBox.btnPrintWR.visible =_theBox. btnPrintWR.includeInLayout = false; */
+			}			
+			
+			public function updateWRID(wrID:String):String{
+				var yr:String = String(_theBox.dfDate.selectedDate.getFullYear());
+				return "WR-"+_data.bCode+"-"+yr.substr(2)+"-"+wrID;
+			}
+			
+			
+			private function itemMouseOver(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color = AccessVars.instance().colBgColorOver;
+			}
+			private function itemMouseOut(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup id="hbCont" paddingBottom="3" paddingTop="3" width="100%" fontSize="14" verticalAlign="middle" 
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtWDNo" width="25%" textAlign="center"/>
+		<s:Label id="txtBranch" width="45%" textAlign="center"/>
+		<s:Label id="txtDate" width="30%" textAlign="center"/>
+	</s:HGroup>
+	
+</s:Group>

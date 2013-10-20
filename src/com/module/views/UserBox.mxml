@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.UserEvent;
+			import com.module.renderer.UserRenderer;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.managers.PopUpManager;
+			
+			private var _arrCol:ArrayCollection;
+			public function set dataCollection(arrCol:ArrayCollection):void{
+				if (dgSearch.numElements > 0){
+					dgSearch.removeAllElements();
+				}
+				
+				if (arrCol.length > 0){
+					var itemUser:UserRenderer;
+					for each (var obj:Object in arrCol){
+						itemUser = new UserRenderer()
+						itemUser.data = obj;
+						dgSearch.addElement(itemUser);
+					}
+				}
+			}
+			
+			public function SearchClickHandler(event:MouseEvent):void
+			{
+				var log:UserEvent = new UserEvent(UserEvent.SEARCH_USER,{searchstr:txtSearchStr.text,uBox:this})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log);
+			}
+			
+			protected function AddUserClickHandler(event:MouseEvent):void
+			{
+				var userPanl:UserPanel = new UserPanel();
+				userPanl.title = "Add User";
+				userPanl._type = 0;
+				PopUpManager.addPopUp(userPanl,AccessVars.instance().mainApp,true);
+				PopUpManager.centerPopUp(userPanl);
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Label text="User Module" fontWeight="bold" fontSize="18" fontStyle="italic"/>
+	<s:HGroup width="100%" verticalAlign="middle">
+		<s:Label text="Search User:"/>
+		<s:TextInput prompt="[Enter Name Here]" id="txtSearchStr" enter="SearchClickHandler(null)"/>
+		<s:Button label="Search" click="SearchClickHandler(event)"/>
+		<s:Line yFrom="0" yTo="10"/>
+		<s:Button label="Add User" click="AddUserClickHandler(event)"/>
+	</s:HGroup>
+	<s:HGroup width="100%" fontSize="14" horizontalAlign="center" fontWeight="bold">
+		<s:Label text="Full Name" width="200" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+		<s:Label text="Username" width="150" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+		<s:Label text="User Type" width="150" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+		<s:Label text="Controls" width="100%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+	</s:HGroup>
+	<s:Group width="100%" height="100%">
+		<s:Scroller width="100%" height="100%">
+			<s:VGroup id="dgSearch" gap="2" width="100%" height="100%" contentBackgroundAlpha="1" contentBackgroundColor="0x8bc76d" clipAndEnableScrolling="true"/>
+		</s:Scroller>
+	</s:Group>
+	<mx:HRule width="100%" height="3"/>
+	<s:HGroup width="100%" gap="5" verticalAlign="middle" fontSize="14" >
+		<s:Label text="Total User: "/>
+		<s:Label id="totCount" text="0"/>
+	</s:HGroup>
+</s:VGroup>

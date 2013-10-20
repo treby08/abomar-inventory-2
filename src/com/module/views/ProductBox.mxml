@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.renderer.ProductRenderer;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			
+			public var _data:Object;
+			/** 0=add 1=edit**/
+			public var _type:int = 0; 
+			public var isSearch:Boolean = false;
+			private var _fromUpdate:Boolean = false;
+			
+			protected function browseclickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			/* protected function SearchClickHandler(event:MouseEvent):void
+			{
+				var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_PRODUCT,{searchstr:txtSearchStr.text,pBox:this})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log);
+			} */
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				btnSave.addEventListener(MouseEvent.CLICK,saveClickHandler);
+				btnClear.addEventListener(MouseEvent.CLICK,clearFields);
+			}
+			
+			private var _arrCol:ArrayCollection;
+			public function set dataCollection(arrCol:ArrayCollection):void{
+				_arrCol = arrCol
+				
+				/* if (dgSearch.numElements > 0){
+					dgSearch.removeAllElements();
+				}
+				
+				if (arrCol.length > 0){
+					var itemUser:ProductRenderer;
+					for each (var obj:Object in arrCol){
+						itemUser = new ProductRenderer()
+						itemUser.data = obj;
+						itemUser.theBox = this
+						dgSearch.addElement(itemUser);
+					}
+				} */
+			}
+			
+			protected function newProdClickHandler(event:MouseEvent):void
+			{
+				_type = 0;
+				clearFields(null);
+				btnNewProd.visible = false;
+				_data = {};
+				btnSave.label = "Add Product";
+				btnClear.label = "Clear"
+			}
+			
+			public function clearFields(event:MouseEvent):void
+			{
+				if (_fromUpdate){
+					_fromUpdate = false;
+					_data.pCode = txtProdCode.text;
+					_data.pName = txtProdName.text;
+					_data.pDesc = txtDesc.text;
+					_data.imgPath = txtImagePath.text;
+					_data.stockCnt = txtStock.text;
+					_data.price = txtPrice.text;
+					_data.supplier = txtSupplier.text;
+					_data.weight = txtWeight.text;
+					_data.size = txtSize.text;
+					_data.subNum = txtSubNum.text;
+					_data.comModUse = txtComModUse.text;
+					(owner as ProductRenderer).data = _data;
+					(owner as ProductRenderer).creationCompleteHandler(null);
+					return;
+				}
+				
+				if (_type == 0){
+					txtProdCode.text = "";
+					txtProdName.text = "";
+					txtDesc.text = "";
+					txtImagePath.text = "";
+					txtStock.text = "0";
+					txtPrice.text = "0.00";
+					txtSupplier.text = "";
+					txtWeight.text = "";
+					txtSize.text = "";
+					txtSubNum.text = "";
+					txtComModUse.text = "";
+					txtProdCode.setFocus();
+				}else{
+					Alert.show("Are you sure to reset to default value?","Confirm Reset to Default",Alert.YES|Alert.NO,null,resetDefCloseHandler)
+				}
+				
+			}
+			
+			private function resetDefCloseHandler(evt:CloseEvent):void{
+				if (evt.detail == Alert.YES){
+					txtProdCode.text = _data.pCode;
+					txtProdName.text = _data.pName;
+					txtDesc.text = _data.pDesc;
+					txtImagePath.text = _data.imgPath;
+					txtStock.text = _data.stockCnt;
+					txtPrice.text = _data.price;
+					txtSupplier.text = _data.supplier;
+					txtWeight.text = _data.weight;
+					txtSize.text = _data.size;
+					txtSubNum.text = _data.subNum;
+					txtComModUse.text = _data.comModUse;
+				}
+			}
+			
+			private function UserErrorTrap():String{
+				var strRet:String = ""
+				
+				if (txtProdCode.text == "")
+					strRet +="- Item Number field is empty \r";
+				if (txtProdName.text == "")
+					strRet +="- Product Name field is empty \r";
+				if (txtStock.text == "")
+					strRet +="- Initial Stock Count field is empty \r";
+				if (txtPrice.text == "")
+					strRet +="- Unit Price field is empty \r";
+				
+				return strRet;
+			}
+			
+			protected function saveClickHandler(event:MouseEvent):void
+			{
+				var strErr:String = UserErrorTrap();
+				if (strErr != ""){
+					Alert.show(strErr,"Error Summary:");
+					return;
+				}
+				
+				var obj:Object = {}
+					
+				obj.pCode = txtProdCode.text;
+				obj.pName = txtProdName.text;
+				obj.pDesc = txtDesc.text;
+				obj.imgPath = txtImagePath.text;
+				obj.stockCnt = txtStock.text;
+				obj.price = txtPrice.text;
+				obj.supplier = txtSupplier.text;
+				obj.weight = txtWeight.text;
+				obj.size = txtSize.text;
+				obj.subNum = txtSubNum.text;
+				obj.comModUse = txtComModUse.text;
+				
+				if (_type == 0){
+					obj.pBox = this;
+					obj.userID = "0";
+					var addUser:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.ADD_PRODUCT,obj);
+					CairngormEventDispatcher.getInstance().dispatchEvent(addUser);
+				}else{
+					obj.custID = _data.custID;
+					obj.pBox = this;
+					_fromUpdate = true;
+					var editUser:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.EDIT_PRODUCT,obj);
+					CairngormEventDispatcher.getInstance().dispatchEvent(editUser);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!--<s:Label text="Products" fontWeight="bold" fontSize="18" fontStyle="italic"/>-->
+	<s:HGroup id="newProd" width="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+			<s:layout>
+				<s:VerticalLayout/>
+			</s:layout>
+			<s:borderStroke> 
+				<mx:SolidColorStroke 
+					color="{AccessVars.instance().borderStrokeColor}" 
+					weight="2"/> 
+			</s:borderStroke> 
+			<s:VGroup  width="100%" height="100%">
+				<s:VGroup  width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5" gap="10">
+					<s:Label text="Product Information"/>
+					<mx:HRule width="100%" height="2"/>
+					<s:HGroup  width="100%">
+						<s:Label text="Item Number:" width="90"/>
+						<s:TextInput id="txtProdCode" width="90"/>
+						<s:Label text="*" color="red"/>
+						<s:Label text="Product Name:" width="90"/>
+						<s:TextInput id="txtProdName" width="100%"/>
+						<s:Label text="*" color="red"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Description:" width="90"/>
+						<s:TextArea id="txtDesc" width="100%" height="50"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Initial Stocks:" width="90"/>
+						<s:TextInput id="txtStock" width="100%" restrict="0-9." text="0" textAlign="right"/>
+						<s:Label text="*" color="red"/>
+						<s:Label text="Unit Price:" width="90"/>
+						<s:TextInput id="txtPrice" width="100%" restrict="0-9." text="0.00" textAlign="right"/>
+						<s:Label text="*" color="red"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Supplier:" width="90"/>
+						<s:TextInput id="txtSupplier" width="100%"/>
+					</s:HGroup>
+					<s:HGroup  width="100%">
+						<s:Label text="Weight:" width="90"/>
+						<s:TextInput id="txtWeight" width="100%" restrict="0-9."/>
+						<s:Label text="Size:" width="90"/>
+						<s:TextInput id="txtSize" width="100%"/>
+					</s:HGroup>
+					<s:HGroup  width="100%">
+						<s:Label text="Sub Number:" width="90"/>
+						<s:TextInput id="txtSubNum" width="100%"/>
+						<s:Label text="Common model use:" width="120"/>
+						<s:TextInput id="txtComModUse" width="100%"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Product Image:" width="90"/>
+						<s:TextInput id="txtImagePath" width="100%" editable="false"/>
+						<s:Button label="Browse" click="browseclickHandler(event)"/>
+					</s:HGroup>
+				</s:VGroup>
+				
+				<s:VGroup  width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+					<s:Label text="Product Image"/>
+					<mx:HRule width="100%" height="2"/>
+					<s:HGroup width="100%"  height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5" horizontalAlign="center">
+						<s:Image id="imgProd" width="260" height="180"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:VGroup>
+		</s:BorderContainer>	
+	</s:HGroup>
+	<s:HGroup width="100%" horizontalAlign="left" verticalAlign="middle" height="30">
+		<!--<s:Label text="Search Product:"/>
+		<s:TextInput prompt="[Enter Product Here]" id="txtSearchStr" enter="SearchClickHandler(null)" width="180"/>
+		<s:Button label="Search" click="SearchClickHandler(event)"/>-->
+		<s:Spacer width="100%"/>
+		<s:Button id="btnNewProd" label="New Product" visible="false" click="newProdClickHandler(event)"/>
+		<s:Button id="btnSave" label="Add Product"/>
+		<s:Button id="btnClear" label="Clear"/>
+	</s:HGroup>
+	<!--<s:VGroup id="searchProd" width="100%" height="100%">
+		
+		<s:HGroup width="100%" fontSize="14" horizontalAlign="center" fontWeight="bold">
+			<s:Label text="Item Code" width="15%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}"/>
+			<s:Label text="Product Name /Description" width="40%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}"/>
+			<s:Label text="Unit Price" width="15%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}"/>
+			<s:Label text="Stock" width="10%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}"/>
+			<s:Label text="Controls" width="20%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}"/>
+		</s:HGroup>
+		<s:Group width="100%" height="100%">
+			<s:Scroller width="100%" height="100%">
+				<s:VGroup id="dgSearch" gap="2" width="100%" height="100%" contentBackgroundAlpha="1" contentBackgroundColor="0x8bc76d" clipAndEnableScrolling="true"/>
+			</s:Scroller>
+		</s:Group>
+		<mx:HRule width="100%" height="3"/>
+		<s:HGroup width="100%" gap="5" verticalAlign="middle" fontSize="14" >
+			<s:Label text="Total Products: "/>
+			<s:Label id="totCount" text="0"/>
+		</s:HGroup>
+	</s:VGroup>-->
+	
+</s:VGroup>

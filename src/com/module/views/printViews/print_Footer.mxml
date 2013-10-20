@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" borderColor="#000000" borderWeight="2"
+				   xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:layout>
+		<s:HorizontalLayout gap="-2"/>
+	</s:layout>
+	<mx:Canvas  height="100">
+		<s:Label x="10" y="5" fontFamily="Arial" fontWeight="bold" fontSize="14" text="Note to Supplier"/>
+		<mx:Text x="10" y="20" htmlText="1. This order must be supplied in accordance with our instruction and spec, otherwise &lt;br/>     we reserve the right to reject your delivery, totally or partially of our sole discretion.&lt;br/>2. Indicate PO number in your invoice. delivery receipt or shipping documents.&lt;br/>3. Submit original PO together with your original invoice" />
+	</mx:Canvas>
+	<mx:Canvas width="100%" height="95" styleName="VBoxBorder" verticalScrollPolicy="off" horizontalScrollPolicy="off"
+			   >
+		
+		<s:VGroup paddingLeft="0" paddingTop="3" width="100%" height="100%" gap="2">
+			<s:Label text="ABOMAR EQUIPMENT SALES CORP." textAlign="center" width="100%" trackingLeft="2"/>
+			<s:Spacer height="45"/>
+			<s:Label text="MARIO C. OCHON" textAlign="center" width="100%" trackingLeft="1"/>
+			<mx:Canvas width="100%" height="20" styleName="topBorder">
+				<s:Label y="2" text="Authorized Signature" textAlign="center" width="100%" verticalAlign="middle"/>											
+			</mx:Canvas>
+		</s:VGroup>
+		
+	</mx:Canvas>
+</s:BorderContainer>

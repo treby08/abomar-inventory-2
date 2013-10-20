@@ -1,0 +1,43 @@
+<root>
+	<main icon="assets/icons/icon_inv.png" name="Purchasing">
+		<sub name="Purchase Requisition" code="pur_pr"/>
+		<sub name="Purchase Order" code="pur_po"/>
+		<sub name="Purchase Order List" code="pur_pol"/>					
+	</main>
+	<main icon="assets/icons/icon_inv.png" name="Inventory">
+		<sub name="Warehouse Receipt" code="inv_wr"/>
+		<sub name="Warehouse Discrepancy" code="inv_wd"/>
+	</main>
+	<main icon="assets/icons/icon_sales.png" name="Invoice">
+		<sub name="New Quote" code="sal_nsq"/>
+		<sub name="New Invoice" code="sal_nsi"/>
+		<sub name="Invoice List" code="sal_nsil"/>
+		<sub name="Payment" code="sal_pay"/>
+	</main>
+	
+	<main name="Customers" code="cus_lst"/>
+	<main name="Users" code="user"/>		
+	<main name="Products" code="inv_pl" icon="assets/icons/icon_inv.png"/>
+	<main name="Suppliers" code="supplier"/>
+	<main name="Branches" code="branch"/>
+	
+	<main icon="assets/icons/icon_report.png" name="Report">
+		<sub name="Purchasing Reports">
+			<sub name="Purchase Requisition List" code="pur_prl"/>
+			<sub name="Purchase Order List" code="pur_pol"/>
+			<sub name="Suppliers List" code="supplier"/>
+		</sub>
+		<sub name="Inventory Reports">
+			<sub name="Warehouse Receipt List" code="rep_inv_wr"/>
+			<sub name="Warehouse Discrepancy List" code="rep_inv_wd"/>
+			<sub name="Products List" code="inv_pl"/>
+		</sub>
+		<sub name="Sales Reports">
+			<sub name="Quote List" code="rep_sal_nsq"/>
+			<sub name="Invoice List" code="rep_sal_nsi"/>
+			<sub name="Payment List" code="rep_sal_pay"/>
+		</sub>
+		<sub name="Customers List" code="cus_lst"/>	
+		<sub name="Branches List" code="branch"/>
+	</main>
+</root>

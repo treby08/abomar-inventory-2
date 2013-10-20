@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="creationCompleteHandler(event)" initialize="initializeHandler(event)"
+		 xmlns:s="library://ns.adobe.com/flex/spark"  title="Price History"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="300">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.DataGrid;
+			import spark.components.TextInput;
+			import spark.events.GridSelectionEvent;
+			import spark.events.IndexChangeEvent;
+			
+			private var _txtPrice:TextInput;
+			private var _prodID:String;
+			private var arrPriceType:ArrayCollection = new ArrayCollection([{label:"List Price",type:"listPrice"},
+				{label:"MDP",type:"dealPrice"},{label:"SRP",type:"srPrice"}]);
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{				
+				addEventListener("closePanel",closeThisPanel);
+				var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_PRICE_LIST,{pBox:this,prodID:_prodID})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log);
+			}
+						
+			public function set txtPrice(value:TextInput):void{
+				_txtPrice = value;
+			}
+			public function set prodID(value:String):void{
+				_prodID = value;
+			}
+			
+			protected function initializeHandler(event:FlexEvent):void
+			{
+				setStyle("hasCloseButton",true);
+			}
+			
+			private function closeThisPanel(evt:Event):void{
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function set dataCollection(arr:ArrayCollection):void{
+				dg.dataProvider = arr;
+			}
+			private function mycmbProdLabelFunction(item:Object):String{
+				return (item)?item.pCode +" - "+item.modelNo:"";
+			}
+			private function priceFunction(item:Object, column:GridColumn):String{
+				return numFmttr.format(item.srPrice);
+			}
+			
+			protected function addItemToDG(event:MouseEvent):void
+			{
+				if (dg.selectedItem){
+					_txtPrice.text = dg.selectedItem[cmbPrice.selectedItem.type];
+					closeThisPanel(null);
+				}
+			}
+			
+			protected function dg_selectionChangeHandler(event:GridSelectionEvent):void
+			{
+				priceSel.text = numFmttr.format(dg.selectedItem[cmbPrice.selectedItem.type]);
+			}
+			
+			protected function cmbPrice_changeHandler(event:IndexChangeEvent):void
+			{
+				if (dg.selectedItem)
+					priceSel.text = numFmttr.format(dg.selectedItem[cmbPrice.selectedItem.type]);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:NumberFormatter id="numFmttr" precision="2" useThousandsSeparator="true"  />
+	</fx:Declarations>
+	
+	
+	<s:VGroup width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:DataGrid id="dg" width="100%" height="100%" sortableColumns="false" textAlign="center" fontSize="12" editable="false"
+					selectionChange="dg_selectionChangeHandler(event)">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="prodDate" width="100" headerText="DATE" editable="false"  headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="center"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					<s:GridColumn dataField="factor" headerText="Factor" width="100"  editable="false"  headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="center"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					<s:GridColumn dataField="srPrice" headerText="SRP" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer" labelFunction="priceFunction">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="right"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					
+				</s:ArrayList>
+			</s:columns>
+		</s:DataGrid>		
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Selected Price" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbPrice" width="100" labelField="label" tabIndex="6" dataProvider="{arrPriceType}" selectedIndex="1"
+							change="cmbPrice_changeHandler(event)"/>
+			<s:Spacer width="10"/>
+			<s:TextInput id="priceSel" text="0.00" width="100%" textAlign="right" editable="false" selectable="false" borderVisible="false" fontWeight="bold" fontSize="14"/>
+		</s:HGroup>
+		<mx:ControlBar width="100%" horizontalAlign="center" verticalAlign="middle">
+			<s:Button label="Change Price" click="addItemToDG(event)"/>
+			<s:Button label="Close" click="closeThisPanel(event)"/>
+		</mx:ControlBar>
+	</s:VGroup>
+	
+</s:Panel>

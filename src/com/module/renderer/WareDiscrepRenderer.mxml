@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.UserPanel;
+			import com.module.views.WareDiscrepancyBox;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _isSelected:Boolean = false;
+			private var _theBox:WareDiscrepancyBox;
+			public var isDispatch:Boolean = false;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			public function get data():Object{
+				return _data;
+			}
+			
+			public function set isSelected(value:Boolean):void{
+				_isSelected = value
+				if (value)
+					sFill.color = AccessVars.instance().colBgColorOver
+				else
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			public function get isSelected():Boolean{
+				return _isSelected;
+			}
+			
+			public function set theBox(value:WareDiscrepancyBox):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtPoNo.text = zeroPad(_data.whr_purOrdID,5);
+				txtWRNo.text = updateWRID(_data.whrID_label);
+				txtVendor.text = _data.supCompName;
+				txtDate.text =String(_data.dateTrans);
+				hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+			}
+			
+			public function zeroPad(number:int, width:int):String {
+				var ret:String = ""+number;
+				while( ret.length < width )
+					ret="0" + ret;
+				return ret;
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				for (var i:int =0; i < _theBox.dgSearch.numElements; i++){
+					(_theBox.dgSearch.getElementAt(i) as WareDiscrepRenderer).isSelected = false;
+				}
+				isSelected = true;
+				
+				isDispatch = true;
+				_theBox.theOwner = this;
+				_theBox.clearFields(null);
+				
+				var obj:Object  = _theBox._tempData = _data;
+				_theBox.txtPONo.text = zeroPad(obj.whr_purOrdID,5);
+				_theBox.txtWRNo.text = updateWRID(_data.whrID_label);
+				_theBox.txtWDNo.text = _data.whdID_label;
+				_theBox.txtBranch.text = obj.bCode+ " - "+obj.bLocation ;//setSelectedBranch(String(obj.branchID));
+				_theBox.updateData();
+				//_theBox.txtPrepBy.text = obj.whr_preparedBy;
+				//_theBox.txtCheckBy.text = obj.whr_checkedBy;
+				
+				/*var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_WH_DISCREPANCY_NUMBER,{qBox:_theBox})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log3);*/
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_WH_DISCREPANCY_DETAILS,{whrID:obj.whrID,qBox:_theBox,itemRen:this,condition:""})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				
+				//_theBox.btnCheckOut.visible = _theBox.btnCheckOut.includeInLayout = true;
+				//_theBox.btnNew.visible = _theBox.btnNew.includeInLayout = true;
+				_theBox.mainCont.enabled = false;
+				_theBox.btnEdit.enabled = true;
+				_theBox.btnSave.enabled = false;
+				//_theBox.btnPrintWR.enabled = true;
+				/* _theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = true;*/
+				_theBox.btnPrintWR.visible =_theBox. btnPrintWR.includeInLayout = false; 
+			}			
+			
+			public function updateWRID(wrID:String):String{
+				var yr:String = String(_theBox.dfDate.selectedDate.getFullYear());
+				return "WR-"+_data.bCode+"-"+yr.substr(2)+"-"+wrID;
+			}
+			
+			
+			protected function deleteClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to cancel \""+_data.fname +" "+_data.mname +" "+_data.lname+"\"?","Cancel Purchase Requisition",Alert.YES|Alert.NO,null,closeHandler);
+			}
+			
+			private function closeHandler(evt:CloseEvent):void
+			{
+				if(evt.detail == Alert.YES){
+					var delEvent:UserEvent = new UserEvent(UserEvent.DELETE_CUSTOMER,{custID:_data.custID,upnl:this});
+					CairngormEventDispatcher.getInstance().dispatchEvent(delEvent);
+				}
+			}
+			
+			private function itemMouseOver(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color = AccessVars.instance().colBgColorOver;
+				/*if (!hbCont.hasEventListener(MouseEvent.MOUSE_OUT))
+					hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);*/
+			}
+			private function itemMouseOut(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color=AccessVars.instance().colBgColor;
+				/*if (!hbCont.hasEventListener(MouseEvent.MOUSE_OVER))
+					hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);*/
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup id="hbCont" paddingBottom="3" paddingTop="3" width="100%" fontSize="14" verticalAlign="middle" 
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtPoNo" width="15%" textAlign="center"/>
+		<s:Label id="txtWRNo" width="25%" textAlign="center"/>
+		<s:Label id="txtVendor" width="35%" textAlign="center"/>
+		<s:Label id="txtDate" width="25%" textAlign="center"/>
+		<!--<s:HGroup width="15%" horizontalAlign="center" paddingRight="5">
+			<s:Button icon="{DEFAULT_CLOSE_UP}" label="Cancel" click="deleteClickHandler(event)"  useHandCursor="true" buttonMode="true"/>
+		</s:HGroup>-->
+	</s:HGroup>
+	
+</s:Group>

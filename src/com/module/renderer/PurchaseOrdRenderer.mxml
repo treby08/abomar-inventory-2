@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.PurchaseOrderBox;
+			import com.module.views.UserPanel;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _isSelected:Boolean = false;
+			private var _theBox:PurchaseOrderBox;
+			public var isDispatch:Boolean = false;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			public function get data():Object{
+				return _data;
+			}
+			
+			public function set isSelected(value:Boolean):void{
+				_isSelected = value
+				if (value)
+					sFill.color = AccessVars.instance().colBgColorOver
+				else
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			public function get isSelected():Boolean{
+				return _isSelected;
+			}
+			
+			public function set theBox(value:PurchaseOrderBox):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				var arr:Array = String(_data.dateTrans).split("-");
+				var yr:String = String( new Date(arr[0],(arr[1]-1),arr[2]).getFullYear());
+				txtReqNo.text = _data.bCode+"-"+yr.substr(2)+"-"+ _data.reqNo;
+				txtBranch.text = _data.bCode +" - "+_data.bLocation;
+				hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				//hbCont.removeEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);
+				//hbCont.removeEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);
+				for (var i:int =0; i < _theBox.dgSearch.numElements; i++){
+					(_theBox.dgSearch.getElementAt(i) as PurchaseOrdRenderer).isSelected = false;
+				}
+				isSelected = true;
+				
+				isDispatch = true;
+				_theBox.theOwner = this;
+				_theBox.clearFields(null);
+				/*<item purReqID=\"".$row['purReqID']."\" reqNo=\"".number_pad($row['purReqID'])."\" 
+				preparedBy=\"".$row['preparedBy']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" 
+				branchID=\"".$row['branchID']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" 
+				totalAmt=\"".$row['totalAmt']."\"/>*/
+				
+				var obj:Object = _theBox._tempData = _data;
+				//_theBox.txtInvoice.text = obj.invTo;
+				//_theBox.txtAppBy.text = obj.approvedBy;
+				//_theBox.txtReqNo.text = obj.reqNo;
+				//var arr:Array = String(_data.dateTrans).split("-");
+				//_theBox.dfDate.selectedDate = new Date(arr[0],(arr[1]-1),arr[2]);
+				_theBox.setSelectedSupplier(_data.supplier);//_theBox.cmbSupplier.selectedItem = 
+				_theBox.setSelectedDelivery(String(obj.branchID));//_theBox.cmbDeliver.selectedItem = 
+				_theBox.purReqID = obj.purReqID;
+				_theBox.txtGT.text = obj.totalAmt;
+				var branchItem:Object = _theBox.getSelectedInvoice(String(_data.branchID));
+				var bPhone:String = String(branchItem.bPhoneNum).length>3?String(branchItem.bPhoneNum).replace("|"," Ext. "):'';
+				_theBox.txtInvoice.text = branchItem.bCode+" - "+branchItem.bLocation+"\r"+	branchItem.bAddress
+					+"\r"+bPhone+"\r"+branchItem.bMobileNum;//obj.bCode;//setSelectedBranch(String(obj.branchID));
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_DETAILS,{purReqID:obj.purReqID,qBox:_theBox,itemRen:this,isPurOrd:"true",condition:""})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				
+				//_theBox.btnCheckOut.visible = _theBox.btnCheckOut.includeInLayout = true;
+				//_theBox.btnNew.visible = _theBox.btnNew.includeInLayout = true;
+				_theBox.mainCont.enabled = false;
+				_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = true;
+				_theBox.btnView.visible = _theBox.btnView.includeInLayout = false;
+			}			
+			
+			
+			protected function deleteClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to cancel \""+_data.fname +" "+_data.mname +" "+_data.lname+"\"?","Cancel Purchase Requisition",Alert.YES|Alert.NO,null,closeHandler);
+			}
+			
+			private function closeHandler(evt:CloseEvent):void
+			{
+				if(evt.detail == Alert.YES){
+					var delEvent:UserEvent = new UserEvent(UserEvent.DELETE_CUSTOMER,{custID:_data.custID,upnl:this});
+					CairngormEventDispatcher.getInstance().dispatchEvent(delEvent);
+				}
+			}
+			
+			private function itemMouseOver(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color = AccessVars.instance().colBgColorOver;
+				/*if (!hbCont.hasEventListener(MouseEvent.MOUSE_OUT))
+					hbCont.addEventListener(MouseEvent.MOUSE_OUT,itemMouseOut);*/
+			}
+			private function itemMouseOut(evt:MouseEvent):void{
+				if (!isSelected)
+					sFill.color=AccessVars.instance().colBgColor;
+				/*if (!hbCont.hasEventListener(MouseEvent.MOUSE_OVER))
+					hbCont.addEventListener(MouseEvent.MOUSE_OVER,itemMouseOver);*/
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup id="hbCont" paddingBottom="3" paddingTop="3" width="100%" fontSize="14" verticalAlign="middle" 
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtReqNo" width="45%" textAlign="center"/>
+		<s:Label id="txtBranch" width="55%" textAlign="center"/>
+		<!--<s:HGroup width="15%" horizontalAlign="center" paddingRight="5">
+			<s:Button icon="{DEFAULT_CLOSE_UP}" label="Cancel" click="deleteClickHandler(event)"  useHandCursor="true" buttonMode="true"/>
+		</s:HGroup>-->
+	</s:HGroup>
+	
+</s:Group>

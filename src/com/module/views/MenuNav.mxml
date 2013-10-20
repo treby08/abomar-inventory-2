@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" backgroundColor="0xFFFFFF"
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="65">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.variables.AccessVars;
+			
+			import flash.net.navigateToURL;
+			
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			protected function logoutClickHandler(event:MouseEvent):void
+			{
+				cntrl.visible = cntrl.includeInLayout = false;
+				AccessVars.instance().mainApp.initializeApp();
+				AccessVars.instance().mainApp.showLoginPanel();
+				lblforTest.x = 200+(spCer.width/2 - lblforTest.width/2)
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				lblforTest.visible = AccessVars.instance().test == 1?true:false;
+				lblforTest.x = 200+(spCer.width/2 - lblforTest.width/2);
+			}
+			
+			
+			protected function profileClickHandler(event:MouseEvent):void
+			{
+				var profPanel:ProfilePanel = new ProfilePanel();
+				PopUpManager.addPopUp(profPanel,AccessVars.instance().mainApp,true);
+				PopUpManager.centerPopUp(profPanel);
+				profPanel = null;
+			}
+			
+			protected function homeClickHandler(event:MouseEvent):void
+			{
+				AccessVars.instance().mainApp.floatMenuVisible(true);
+			}
+			protected function helpClickHandler(event:MouseEvent):void
+			{
+				navigateToURL(new URLRequest("http://www.abomar.com/icsuserguide/"),"_blank");
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:HGroup width="100%" height="100%">
+		<s:Image source="assets/logo2.png" height="62" maintainProjectionCenter="false"/>
+		<s:Spacer id="spCer" width="100%"/>
+		<s:HGroup id="cntrl" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5"
+				  visible="false" includeInLayout="false" gap="10">
+			<s:Button label="Home" height="53" icon="assets/icons/icon_home.png" useHandCursor="true" click="homeClickHandler(event)" buttonMode="true"/>
+			<s:Button label="Profile" height="53" icon="assets/icons/icon_prof.png" useHandCursor="true" click="profileClickHandler(event)" buttonMode="true"/>
+			<mx:VRule height="55"/>
+			<s:Button label="Help" height="53" icon="assets/icons/icon_help.png" useHandCursor="true" click="helpClickHandler(event)" buttonMode="true"/>
+			<s:Button label="Logout" height="53" icon="assets/icons/icon_logout.png" useHandCursor="true" click="logoutClickHandler(event)" buttonMode="true"/>
+		</s:HGroup>
+	</s:HGroup>
+	<s:Label id="lblforTest" x="200" y="20" color="#CA2A1E" fontSize="22" fontWeight="bold" text="FOR TRAINING PURPOSES ONLY"/>
+</s:BorderContainer>

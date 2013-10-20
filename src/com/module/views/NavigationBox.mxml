@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="200" height="100%" 
+		 xmlns:customComponents="com.customComponents.*" xmlns:controls="com.flexlib.controls.*"
+		 creationComplete="creationCompleteHandler(event)" xmlns:menuClasses="com.customComponents.controls.menuClasses.*">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.flexlib.controls.VerticalMenuBar;
+			import com.variables.AccessVars;
+			
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.controls.menuClasses.MenuBarItem;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.MenuEvent;
+			[Bindable]
+			private var menuNav:XMLListCollection;
+			//private var vMenuBar:VerticalMenuBar;
+			private var menuNavList:XMLList = 
+				<>
+				<main icon="assets/icons/icon_inv.png" name="Purchasing">
+					<sub name="Purchase Requisition" code="pur_pr"/>
+					<sub name="Purchase Order" code="pur_po"/>
+					<sub name="Purchase Order List" code="pur_pol"/>					
+				</main>
+				<main icon="assets/icons/icon_inv.png" name="Inventory">
+					<sub name="Warehouse Receipt" code="inv_wr"/>
+					<sub name="Warehouse Discrepancy" code="inv_wd"/>
+				</main>
+				<main icon="assets/icons/icon_sales.png" name="Invoice">
+					<sub name="New Quote" code="sal_nsq"/>
+					<sub name="New Invoice" code="sal_nsi"/>
+					<sub name="Payment" code="sal_pay"/>
+				</main>
+				
+				<main name="Customers" code="cus_lst"/>	
+				<main name="Products" code="inv_pl" icon="assets/icons/icon_inv.png"/>
+				<main name="Suppliers" code="supplier"/>
+				<main name="Branches" code="branch"/>
+				
+				<main icon="assets/icons/icon_report.png" name="Report">
+					<sub name="Purchasing Reports">
+						<sub name="Purchase Requisition List" code="pur_prl"/>
+						<sub name="Purchase Order List" code="pur_pol"/>
+						<sub name="Suppliers List" code="supplier"/>
+					</sub>
+					<sub name="Inventory Reports">
+						<sub name="Warehouse Receipt List" code="rep_inv_wr"/>
+						<sub name="Warehouse Discrepancy List" code="rep_inv_wd"/>
+						<sub name="Products List" code="inv_pl"/>
+					</sub>
+					<sub name="Sales Reports">
+						<sub name="Quote List" code="rep_sal_nsq"/>
+						<sub name="Invoice List" code="rep_sal_nsi"/>
+						<sub name="Payment List" code="rep_sal_pay"/>
+					</sub>
+					<sub name="Customers List" code="cus_lst"/>	
+					<sub name="Branches List" code="branch"/>
+				</main>
+			</>;
+			/*  <sub name="Purchasing Reports">
+			<sub name="Purchase Order Summary" code="rep_pur_pos"/>
+			<sub name="Purchase Order Details" code="rep_pur_pod"/>
+			<sub name="Purchase Order Status" code="rep_pur_postat"/>
+			<sub name="Supplier Product List" code="rep_pur_vpl"/>
+			</sub>
+			<sub name="Inventory Reports">
+			<sub name="Inventory Summary" code="rep_inv_is"/>
+			<sub name="Invetory Details Report" code="rep_inv_idr"/>
+			<sub name="Inventory by Location" code="rep_inv_ibl"/>
+			<sub name="Inventory Movement Summary" code="rep_inv_ims"/>
+			<sub name="Stock Reordering Report" code="rep_inv_srr"/>
+			<sub name="Product Price List" code="rep_inv_ppl"/>
+			</sub>
+			<sub name="Sales Reports">
+			<sub name="Sales Representative Report" code="rep_sal_srr"/>
+			<sub name="Sales by Product Summary" code="rep_sal_sbps"/>
+			<sub name="Customer Payment Summary" code="rep_sal_cps"/>
+			<sub name="Customer Order History" code="rep_sal_coh"/>
+			</sub>*/
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				//menuNav = new XMLListCollection(menuNavList);
+				//createVerticalMenuBar()
+			}
+			
+			private function createVerticalMenuBar():void{
+				vMenuBar = new VerticalMenuBar();
+				vMenuBar.dataProvider = menuNav;
+				vMenuBar.direction = "right";
+				vMenuBar.labelField="@name";
+				vMenuBar.width=200;
+				vMenuBar.percentHeight=100;
+				vMenuBar.useHandCursor=true;
+				vMenuBar.buttonMode=true;
+				vMenuBar.setStyle("itemSkin",assets.skins.skin_menuBar);
+				vMenuBar.addEventListener(MouseEvent.CLICK,menuClickHandler);
+				vMenuBar.addEventListener(ItemClickEvent.ITEM_CLICK,itemClickHandler);
+				vMenuBar.setStyle("fontSize",16);
+				vMenuBar.setStyle("fontWeight","bold");
+				addElement(vMenuBar);
+				
+			}
+			public function updateNavList(dataXML:XML):void{
+				removeElement(vMenuBar);
+				menuNav = new XMLListCollection(dataXML.children());
+				createVerticalMenuBar()
+			}
+			
+			[Embed(source="assets/icons/icon_sales.png")]
+			public var iconTwo_App:Class;
+			
+			protected function itemClickHandler(event:MenuEvent):void
+			{
+				/* trace("itemClickHandler::::event.item:",(event.item as XML).toXMLString())
+				trace(String(event.item.@code)); */
+				switch(String(event.item.@code)){
+					case "inv_np":
+					case "inv_pl":		
+					case "inv_wr":		
+					case "inv_wd":
+					case "rep_inv_wd":
+					case "rep_inv_wr":		
+						AccessVars.instance().mainApp.appChange(null,2,String(event.item.@code));
+					break;
+					case "pur_pr":	
+					case "pur_po":	
+					case "pur_pol":
+					case "pur_prl":
+						AccessVars.instance().mainApp.appChange(null,4,String(event.item.@code));
+					break;
+					case "sal_nsi":	
+					case "sal_nsil":	
+					case "rep_sal_nsi":	
+					case "sal_nsq":
+					case "sal_pay":
+					case "rep_sal_nsq":
+						AccessVars.instance().mainApp.appChange(null,3,String(event.item.@code));
+					break;
+					case "cus_new":	
+					case "cus_lst":	
+						AccessVars.instance().mainApp.appChange(null,1,String(event.item.@code));
+					break;
+					case "branch":		
+						AccessVars.instance().mainApp.appChange(null,5,String(event.item.@code));
+					break;
+					
+				}
+			}
+			
+			protected function menuClickHandler(event:MouseEvent):void
+			{
+				if(VerticalMenuBar(event.currentTarget).selectedIndex == -1)
+					return;
+				try{
+					var item:XML = XML(VerticalMenuBar(event.currentTarget).getMenuAt(VerticalMenuBar(event.currentTarget).selectedIndex).dataProvider.toXMLString());
+				}catch(e:Error){
+					return;
+				}
+				if (!item.hasOwnProperty("@code"))return;
+				
+				trace(item.@code)
+				switch(String(item.@code)){
+					case "cus_lst":	
+						AccessVars.instance().mainApp.appChange(null,1,String(item.@code));
+					break;
+					case "inv_pl":		
+						AccessVars.instance().mainApp.appChange(null,2,String(item.@code));
+					break;
+					case "branch":		
+						AccessVars.instance().mainApp.appChange(null,5,String(item.@code));
+					break;
+					case "supplier":		
+						AccessVars.instance().mainApp.appChange(null,6,String(item.@code));
+					break;
+					case "user":		
+						AccessVars.instance().mainApp.appChange(null,0,String(item.@code));
+					break;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<controls:VerticalMenuBar id="vMenuBar" dataProvider="{menuNav}" click="menuClickHandler(event)" direction="right" labelField="@name"  width="200" height="100%" useHandCursor="true"
+							  fontSize="16" fontWeight="bold" itemClick="itemClickHandler(event)" buttonMode="true" itemSkin="assets.skins.skin_menuBar">
+	
+	</controls:VerticalMenuBar>
+</s:Group>

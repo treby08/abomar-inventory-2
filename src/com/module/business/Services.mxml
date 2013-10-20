@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Object xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.variables.SecurityType;
+			
+		    public static var  LOGIN_SERVICE:String = "login_service";
+		    public static var  USER_TYPE_LIST:String = "user_type_list";
+		    public static var  BRANCH_LIST:String = "branch_list";
+		    public static var  DATA_LIST:String = "data_list";
+		    public static var  BRANCH_SERVICE:String = "branch_service";
+		    public static var  USER_SERVICE:String = "user_service";
+		    public static var  CUSTOMER_SERVICE:String = "customer_service";
+		    public static var  SUPPLIER_SERVICE:String = "supplier_service";
+		    public static var  PRODUCT_SERVICE:String = "product_service";
+		    public static var  SALES_SERVICE:String = "sales_service";
+		    public static var  QOUTE_SERVICE:String = "qoute_service";
+		    public static var  PURCHASE_REQ_SERVICE:String = "purchase_req_service";
+		    public static var  PAYMENT_SERVICE:String = "payment_service";
+		    public static var  PURCHASE_ORD_SERVICE:String = "purchase_ord_service";
+		    public static var  WAREHOUSE_RECEIPT_SERVICE:String = "warehouse_receipt_service";
+		    public static var  WAREHOUSE_DISCREPANCY_SERVICE:String = "warehouse_discrepancy_service";
+					    
+			public function getHTTPService( name : String ) : HTTPService
+		    {
+		      	return this[name];
+		    }
+			
+		]]>
+	</mx:Script>
+		
+	<mx:HTTPService id="login_service"
+		url="{SecurityType.HTTP_HOST+'/login.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="user_type_list"
+		url="{SecurityType.HTTP_HOST+'/userTypeList.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="branch_list"
+		url="{SecurityType.HTTP_HOST+'/branchList.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="data_list"
+		url="{SecurityType.HTTP_HOST+'/dataList.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="branch_service"
+		url="{SecurityType.HTTP_HOST+'/branchAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="user_service"
+		url="{SecurityType.HTTP_HOST+'/userAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="customer_service"
+		url="{SecurityType.HTTP_HOST+'/customerAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="supplier_service"
+		url="{SecurityType.HTTP_HOST+'/supplierAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="product_service"
+		url="{SecurityType.HTTP_HOST+'/productAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="sales_service"
+		url="{SecurityType.HTTP_HOST+'/salesInvoiceAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="payment_service"
+		url="{SecurityType.HTTP_HOST+'/paymentAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="qoute_service"
+		url="{SecurityType.HTTP_HOST+'/salesQuoteAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="purchase_req_service"
+		url="{SecurityType.HTTP_HOST+'/purchaseReqAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="purchase_ord_service"
+		url="{SecurityType.HTTP_HOST+'/purchaseOrdAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="warehouse_receipt_service"
+		url="{SecurityType.HTTP_HOST+'/whReceiptAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="warehouse_discrepancy_service"
+		url="{SecurityType.HTTP_HOST+'/whDiscrepancyAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+						
+</mx:Object>

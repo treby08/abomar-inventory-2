@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="creationCompleteHandler(event)" initialize="initializeHandler(event)"
+		 xmlns:s="library://ns.adobe.com/flex/spark"  title="Add Product"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="350" height="250">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.DataGrid;
+			import spark.events.IndexChangeEvent;
+			
+			private var _dataGrid:DataGrid;
+			private var _POID:String;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{				
+				cmbRemarks.dataProvider = AccessVars.instance().remarks;
+				addEventListener("closePanel",closeThisPanel);
+				var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_PRODUCT,{searchstr:"",condition:"",sBox:this})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log);
+			}
+						
+			public function set dataGrid(value:DataGrid):void{
+				_dataGrid = value;
+			}
+			public function set POID(value:String):void{
+				_POID = value;
+			}
+			
+			protected function initializeHandler(event:FlexEvent):void
+			{
+				setStyle("hasCloseButton",true);
+			}
+			
+			private function closeThisPanel(evt:Event):void{
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function setDataProvider(arr:ArrayCollection,type:int):void{
+				if (type == 0){
+					cmbProd.dataProvider = arr;
+				}
+			}
+			private function mycmbProdLabelFunction(item:Object):String{
+				return (item)?item.pCode +" - "+item.modelNo:"";
+			}
+			
+			protected function addItemToDG(event:MouseEvent):void
+			{
+				var arrDGProvider:ArrayCollection = _dataGrid.dataProvider as ArrayCollection;
+				var item:Object = new Object();
+				item.num = arrDGProvider.length+1
+				item.podID = _POID;
+				item.pod_prodID = cmbProd.selectedItem.prodID
+				item.modelNo = cmbProd.selectedItem.modelNo
+				item.prodDesc = cmbProd.selectedItem.desc;
+				item.qty = txtQty.value;
+				item.qtyRec = txtQtyRecv.value;
+				item.pkgNo = txtPkgNo.text
+				item.remarks = cmbRemarks.selectedItem?cmbRemarks.selectedItem.remID:"";
+				item.remarksName = cmbRemarks.selectedItem?cmbRemarks.selectedItem.remLabel:"";
+				item.isNew = "1";
+				arrDGProvider.addItem(item);
+				_dataGrid.dataProvider = arrDGProvider;
+				closeThisPanel(null);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	
+	<s:VGroup width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Item / Model No." width="115" textAlign="right"/>
+			<s:ComboBox id="cmbProd" width="100%" tabIndex="2" labelFunction="mycmbProdLabelFunction"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Quantity" width="115" textAlign="right"/>
+			<s:NumericStepper id="txtQty" width="150" value="0" textAlign="right" tabIndex="3" change="{txtQtyRecv.value = txtQty.value}"/>		
+		</s:HGroup>		
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Package No." width="115" textAlign="right"/>
+			<s:TextInput id="txtPkgNo" width="100%" tabIndex="4"/>		
+		</s:HGroup>		
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Quantity Received" width="115" textAlign="right"/>
+			<s:NumericStepper id="txtQtyRecv" width="150" value="0" textAlign="right" tabIndex="5" enabled="false"/>		
+		</s:HGroup>		
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Remarks" width="115" textAlign="right"/>
+			<s:DropDownList id="cmbRemarks" width="100%" labelField="remLabel" tabIndex="6"/>
+		</s:HGroup>		
+		<s:Spacer height="100%"/>
+		<mx:ControlBar width="100%" horizontalAlign="center" verticalAlign="middle">
+			<s:Button label="Add Item" click="addItemToDG(event)"/>
+			<s:Button label="Close" click="closeThisPanel(event)"/>
+		</mx:ControlBar>
+	</s:VGroup>
+	
+</s:Panel>

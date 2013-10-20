@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" backgroundAlpha="0.8" borderVisible="false"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"  creationComplete="creationCompleteHandler(event)">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.customComponents.controls.VerticalMenuBar;
+			import com.module.views.NavigationBox;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.MenuBar;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			
+			private var _dataArr:ArrayCollection;
+			private var _dataXML:XML;
+			private var _mainMenu:Boolean = false;
+			
+			public function set mainMenu(value:Boolean):void{
+				_mainMenu = value;
+			}
+			
+			public function get mainMenu():Boolean{
+				return _mainMenu;
+			}
+			
+			public function set dataArr(value:ArrayCollection):void{
+				_dataArr = value;
+			}
+			public function set dataXML(value:XML):void{
+				_dataXML = value;
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				var _navItem:NavigationItem;
+				var _tempObj:Object;
+				visible = includeInLayout = _mainMenu;
+				/* for each (var obj:Object in _dataArr){
+					_navItem = new NavigationItem();
+					_navItem.dataObj = obj;
+					addElement(_navItem);
+				} */
+				//trace(_dataXML.toXMLString())
+				for each (var obj:XML in _dataXML.children()){
+					trace(obj.toXMLString())
+					_navItem = new NavigationItem();
+					_tempObj={};
+					if (obj.hasOwnProperty('@icon'))
+						_tempObj.img=String(obj.@icon);
+					_tempObj.name = obj.@name;
+					_navItem.dataObj = _tempObj;
+					
+					if (obj.hasComplexContent())
+						createSubMenu(obj,_navItem);					
+					
+					
+					addElement(_navItem);
+				} 
+				
+			}
+			
+			private function createSubMenu(objList:XML,pItem:NavigationItem):void{
+				var _navMen:VerticalMenuBar = new VerticalMenuBar();
+				_navMen.dataProvider = objList;
+				//_navMen.mainMenu = false;
+				_navMen.owner =pItem;
+				pItem.navMenu = _navMen
+				_navMen.visible = _navMen.includeInLayout = false
+				
+				pItem.addEventListener(MouseEvent.CLICK,navOverEvent);
+				pItem.addEventListener(MouseEvent.MOUSE_OUT,navOutEvent);
+				addElement(_navMen);
+				/*pItem.navMenu = _navMen;
+				(parent as NavigationBox).addElement(_navMen);
+				pItem.addEventListener(MouseEvent.MOUSE_OVER,navOverEvent);
+				pItem.addEventListener(MouseEvent.MOUSE_OUT,navOutEvent);*/
+				
+				
+			}
+			
+			protected function navOverEvent(event:MouseEvent):void
+			{
+				UIComponent(NavigationItem(event.currentTarget).navMenu).visible = true;
+				UIComponent(NavigationItem(event.currentTarget).navMenu).includeInLayout = true;
+				UIComponent(NavigationItem(event.currentTarget).navMenu).y = NavigationItem(event.currentTarget).localToGlobal(new Point(NavigationItem(event.currentTarget).x,NavigationItem(event.currentTarget).y)).y
+				/*NavigationItem(event.currentTarget).navMenu.y = NavigationItem(event.currentTarget).localToGlobal(new Point(NavigationItem(event.currentTarget).mouseX,NavigationItem(event.currentTarget).mouseY)).y;
+				(NavigationItem(event.currentTarget).navMenu as NavigationMenu).visible = true;
+				(NavigationItem(event.currentTarget).navMenu as NavigationMenu).includeInLayout = true;*/
+				
+			}
+			
+			protected function navOutEvent(event:MouseEvent):void
+			{	
+				UIComponent(NavigationItem(event.currentTarget).navMenu).visible = false;
+				UIComponent(NavigationItem(event.currentTarget).navMenu).includeInLayout = false;
+				//event.
+				/*(NavigationItem(event.currentTarget).navMenu as NavigationMenu).visible = false;
+				(NavigationItem(event.currentTarget).navMenu as NavigationMenu).includeInLayout = false;*/
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+</s:BorderContainer>

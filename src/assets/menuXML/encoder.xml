@@ -1,0 +1,17 @@
+<root>
+	<main icon="assets/icons/icon_inv.png" name="Purchasing">
+		<sub name="Purchase Requisition" code="pur_pr"/>
+		<sub name="Purchase Order" code="pur_po"/>
+		<sub name="Purchase Order List" code="pur_pol"/>					
+	</main>
+	<main icon="assets/icons/icon_inv.png" name="Inventory">
+		<sub name="Warehouse Receipt" code="inv_wr"/>
+		<sub name="Warehouse Discrepancy" code="inv_wd"/>
+	</main>
+	<main icon="assets/icons/icon_sales.png" name="Invoice">
+		<sub name="New Quote" code="sal_nsq"/>
+		<sub name="New Invoice" code="sal_nsi"/>
+		<sub name="Invoice List" code="sal_nsil"/>
+		<sub name="Payment" code="sal_pay"/>
+	</main>
+</root>

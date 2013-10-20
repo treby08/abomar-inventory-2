@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" title="Profile" initialize="initHandler(event)"
+		 xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="470" mouseDown="startDrag()" mouseUp="stopDrag()">
+	<s:layout>
+		<s:VerticalLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.DataListEvent;
+			import com.module.events.UserEvent;
+			import com.variables.AccessVars;
+			import com.variables.SecurityType;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			private var dataXML:XML;
+			private var _fromUpdate:Boolean = false;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				if (AccessVars.instance().userType != null)
+					showDefault();
+				
+				if (cmbUserType.selectedIndex == -1 && dataXML)
+					cmbUserType.selectedIndex = getItemIndex(int(dataXML.@userTypeID));
+			}
+			
+			public function showDefault():void
+			{
+				dataXML = SecurityType.LOGIN_DETAILS;
+				txtfname.text = dataXML.@name;
+				txtPhone.text = dataXML.@pnum;
+				txtAdd.text = dataXML.@address;
+				txtMobile.text = dataXML.@mnum;
+				txtEmail.text = dataXML.@email;
+				/* cmbUserType.selectedItem = {label:dataXML.@userTypeName,id:dataXML.@userTypeID,remark:dataXML.@remark}
+				cmbUserType.selectedIndex = int(dataXML.@userTypeID);//{label:dataXML.@userTypeName,id:dataXML.@userTypeID,remark:dataXML.@remark}
+				cmbUserType.validateDisplayList();
+				cmbUserType.validateNow(); */
+				rbMale.selected = (dataXML.@sex=="Male");
+				rbFemale.selected = (dataXML.@sex=="Female");
+				txtUser.text = dataXML.@user;
+				txtPass.text = dataXML.@pass;
+			}
+			
+			public function cancelClickHandler(event:MouseEvent):void
+			{
+				if (_fromUpdate){
+					_fromUpdate = false;
+					dataXML.@userTypeID = cmbUserType.selectedItem.id;
+					dataXML.@name = txtfname.text;
+					dataXML.@address = txtAdd.text;
+					dataXML.@pnum = txtPhone.text;
+					dataXML.@mnum = txtMobile.text;
+					dataXML.@email = txtEmail.text;
+					dataXML.@user = txtUser.text;
+					dataXML.@pass = txtPass.text;
+					dataXML.@sex = rbMale.selected?"Male":"Female";
+					SecurityType.LOGIN_DETAILS = dataXML;
+				}
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function defaultClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to reset to default value?","Confirm Reset to Default",Alert.YES|Alert.NO,null,resetDefCloseHandler)
+				
+			}
+			private function resetDefCloseHandler(evt:CloseEvent):void{
+				if (evt.detail == Alert.YES){
+					showDefault();
+				}
+			}
+			protected function initHandler(event:FlexEvent):void
+			{
+				if (AccessVars.instance().userType == null){
+					cmbUserType.addEventListener(FlexEvent.UPDATE_COMPLETE,cmbUserType_updateCompleteHandler);
+					CairngormEventDispatcher.getInstance().dispatchEvent(new DataListEvent(DataListEvent.GET_USERTYPE_LIST,this));
+				}else
+					cmbUserType.dataProvider= AccessVars.instance().userType;
+			}
+			
+			protected function updateClickHandler(event:MouseEvent):void
+			{
+				var strErr:String = UserErrorTrap();
+				if (strErr != ""){
+					Alert.show(strErr,"Error Summary:");
+					return;
+				}
+				
+				var obj:Object = {}
+				obj.userTypeID = cmbUserType.selectedItem.id;
+				obj.name = txtfname.text;
+				obj.address = txtAdd.text;
+				obj.phoneNum = txtPhone.text;
+				obj.mobileNum = txtMobile.text;
+				obj.email = txtEmail.text;
+				obj.user = txtUser.text;
+				obj.pass = txtPass.text;
+				obj.gender = rbMale.selected?"Male":"Female";
+				obj.pnl = this;
+
+				obj.usersID = dataXML.@usersID;
+				_fromUpdate = true;
+				var editUser:UserEvent = new UserEvent(UserEvent.EDIT_USER,obj);
+				CairngormEventDispatcher.getInstance().dispatchEvent(editUser);
+				
+			}
+			
+			private function UserErrorTrap():String{
+				var strRet:String = ""
+				if (txtPass.text != txtConfPass.text)
+					strRet +="- Password does not match \r";
+				if (txtPass.text == "")
+					strRet +="- Password field is empty \r";
+				if (txtUser.text == "")
+					strRet +="- Username field is empty \r";
+				if (txtfname.text == "")
+					strRet +="- Full Name field is empty \r";
+				if (cmbUserType.selectedIndex == -1)
+					strRet +="- User Type field is empty\r";
+				
+				return strRet;
+			}
+			
+			
+			protected function cmbUserType_updateCompleteHandler(event:FlexEvent):void
+			{
+				if (cmbUserType.selectedIndex == -1 && dataXML){
+					cmbUserType.selectedIndex = getItemIndex(int(dataXML.@userTypeID));
+					if (cmbUserType.selectedIndex != -1)
+						cmbUserType.removeEventListener(FlexEvent.UPDATE_COMPLETE,cmbUserType_updateCompleteHandler)
+				}
+			}
+			
+			private function getItemIndex(val:int):int{
+				var arrCol:ArrayCollection = AccessVars.instance().userType;
+				
+				for (var i:int = 0; i < arrCol.length; i++){
+					if (arrCol.getItemAt(i).id == val)
+						return i;
+				}
+				return -1;
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup  width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+			<s:borderStroke> 
+				<mx:SolidColorStroke 
+					color="0xCCCCCC" 
+					weight="2"/> 
+			</s:borderStroke> 
+			<s:VGroup  width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+				<s:Label text="Personal Information"/>
+				<mx:HRule width="100%" height="2"/>
+				<s:HGroup width="100%">
+					<s:VGroup  width="100%" height="100%">
+						<s:HGroup width="100%">
+							<s:Label text="Full Name:" width="90"/>
+							<s:TextInput id="txtfname" width="100%"/>
+							<s:Label text="*" color="red"/>
+						</s:HGroup>
+						<s:HGroup width="100%">
+							<s:Label text="Address:" width="90"/>
+							<s:TextArea id="txtAdd" width="100%" height="50"/>
+						</s:HGroup>
+						<s:HGroup width="100%">
+							<s:Label text="Phone Number:" width="90"/>
+							<s:TextInput id="txtPhone" width="100%" restrict="0-9\-()"/>
+						</s:HGroup>
+						<s:HGroup width="100%">
+							<s:Label text="Mobile Number:" width="90"/>
+							<s:TextInput id="txtMobile" width="100%" restrict="0-9\-"/>
+						</s:HGroup>
+						<s:HGroup width="100%">
+							<s:Label text="Email address:" width="90"/>
+							<s:TextInput id="txtEmail" width="100%" restrict="a-zA-Z@._"/>
+						</s:HGroup>
+						<s:HGroup width="100%">
+							<s:Label text="Gender:" width="90"/>
+							<s:HGroup width="100%" paddingLeft="5">
+								<s:RadioButton label="Male" id="rbMale" groupName="rbSex"/>
+								<s:RadioButton label="Female" id="rbFemale" groupName="rbSex"/>
+							</s:HGroup>
+						</s:HGroup>
+					</s:VGroup>
+					
+				</s:HGroup>
+				<s:Spacer height="100%"/>
+				<s:Label text="Account Information"/>
+				<mx:HRule width="100%" height="2"/>
+				<s:VGroup  width="100%">
+					<s:HGroup width="100%">
+						<s:Label text="User Type:" width="90"/>
+						<s:DropDownList id="cmbUserType" width="100%" labelField="label" cornerRadius="5" enabled="false"/>
+						<s:Label text="*" color="red"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Username:" width="90"/>
+						<s:TextInput id="txtUser" width="100%"/>
+						<s:Label text="*" color="red"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Password:" width="90"/>
+						<s:TextInput id="txtPass" width="100%" displayAsPassword="true"/>
+						<s:Label text="*" color="red"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="Confirm Password:" width="90"/>
+						<s:TextInput id="txtConfPass" width="100%" displayAsPassword="true"/>
+						<s:Label text="*" color="red"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:VGroup>
+		</s:BorderContainer>	
+	</s:VGroup>
+	<s:HGroup width="100%" horizontalAlign="center" verticalAlign="middle" height="30">
+		<s:Button label="Save" click="updateClickHandler(event)"/>
+		<s:Button label="Cancel" click="cancelClickHandler(event)"/>
+		<s:Button label="Default" click="defaultClickHandler(event)"/>
+	</s:HGroup>
+</s:Panel>

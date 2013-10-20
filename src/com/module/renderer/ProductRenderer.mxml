@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.views.ProductBox;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.controls.DateField;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _theBox:Object;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			[Bindable]
+			public var _bgColor:uint = AccessVars.instance().colBgColor;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			
+			public function set theBox(value:Object):void{
+				_theBox = value
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtItemCode.text = _data.modelNo;
+			/* 	txtUnitPrice.text = _data.price; 
+				txtStock.text = _data.stockCnt; 
+				var contList:String = "";
+				contList = (_data.pName != "")?"<B>"+_data.pName+"</B>\r":"";
+				contList += (_data.pDesc != "")?" -- "+_data.pDesc+"":""; */
+				txtCode.text = _data.pCode;
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				
+				/* _theBox.txtProdCode.text = _data.pCode;
+				_theBox.txtProdName.text = _data.pName;
+				_theBox.txtDesc.text = _data.pDesc;
+				_theBox.txtImagePath.text = _data.imgPath;
+				_theBox.txtStock.text = _data.stockCnt;
+				_theBox.txtPrice.text = _data.price;
+				_theBox.txtSupplier.text = _data.supplier;
+				_theBox.txtWeight.text = _data.weight;
+				_theBox.txtSize.text = _data.size;
+				_theBox.txtSubNum.text = _data.subNum;
+				_theBox.txtComModUse.text = _data.comModUse; */
+				/* {prodID:obj.@prodID,pCode:obj.@pCode,modelNo:obj.@modelNo,remarks:obj.@remarks,stockCnt:obj.@stockCnt,returnable:obj.@returnable,
+					imgPath:obj.@imgPath,branchName:obj.@branchName,supplier:obj.@supplier,weight:obj.@weight,size:obj.@size,subNum:obj.@subNum,
+						comModUse:obj.@comModUse,pDate:obj.@pDate,factor:obj.@factor,inactive:obj.@inactive,listPrice:obj.@listPrice,dealPrice:obj.@dealPrice,srPrice:obj.@srPrice
+							,priceCurr:obj.@priceCurr} */
+				
+				_theBox.txtItemModNo.text = _data.modelNo;
+				_theBox.txtItemCode.text = _data.pCode;
+				_theBox.txtSubNum.text = _data.subNum;
+				_theBox.txtDesc.text = _data.desc;
+				_theBox.txtComModUse.text = _data.comModUse;
+				_theBox.cmbSupplier.selectedItem = _theBox.setSelectedSupplier(_data.supplier);
+				_theBox.txtFactor.text = _data.factor;
+				trace("_data.pDate",_data.pDate);
+				var arr:Array = String(_data.pDate).split("-");
+				DateField(_theBox.dfDate).selectedDate = new Date(arr[0],(arr[1]-1),arr[2]);
+				arr = String(_data.remarks).split("|");
+				if (arr.length > 0){
+					//cbNotCD.selected+"|"+cbNotAvail.selected+"|"+cbOthers+"|"+txtOthers.text;
+					_theBox.cbNotCD.selected = String(arr[0])=="true"?true:false;
+					_theBox.cbNotAvail.selected = String(arr[1])=="true"?true:false;
+					_theBox.cbOthers.selected = String(arr[2])=="true"?true:false;
+					_theBox.txtOthers.text = String(arr[3]);
+				}
+				_theBox.txtImagePath.text = _data.imgPath!=""?_data.imgPath:"";
+				_theBox.txtStock.text = _data.stockCnt;					
+				_theBox.txtWeight.text = _data.weight;
+				_theBox.txtSize.text = _data.size;
+				_theBox.cbReturn.selected = String(_data.returnable)=="1"?true:false;
+				_theBox.cbInactive.selected = String(_data.inactive)=="1"?true:false;
+				_theBox.txtLstPrice.text = _data.listPrice;
+				_theBox.txtDealPrice.text = _data.dealPrice;
+				_theBox.txtSRP.text = _data.srPrice;
+				
+				arr = String(_data.priceCurr).split("|");
+				if (arr.length > 0){
+					_theBox.cmbLstCurr.selectedIndex = int(arr[0]);
+					_theBox.cmbDealCurr.selectedIndex = int(arr[1]);
+				}
+				
+				_theBox._type = 1;
+				_theBox._data = _data;
+				//_theBox.btnNewProd.visible = true;
+				_theBox.hasSelectedItem = true;
+				if (_data.imgPath && _data.imgPath !="")
+					_theBox.loadImage(_data.imgPath);
+				else
+					_theBox.unloadImage();
+				
+				_theBox.theOwner = this;
+				//_theBox.showHide(true);
+				
+				_theBox.btnSave.visible = _theBox.btnSave.includeInLayout = false;
+				_theBox.btnNewProd.visible = _theBox.btnNewProd.includeInLayout = true;
+				_theBox.mainCont.enabled = false;
+				_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = true;
+				_theBox.btnOrdHis.visible = _theBox.btnOrdHis.includeInLayout = true;
+				_theBox.btnClear.visible = _theBox.btnClear.includeInLayout = false;
+			}
+			
+			protected function deleteClickHandler(event:MouseEvent):void
+			{
+				Alert.show("Are you sure to delete \""+_data.pCode +" - "+_data.pName +"\" as Product?","Delete Product",Alert.YES|Alert.NO,null,closeHandler);
+			}
+			
+			private function closeHandler(evt:CloseEvent):void
+			{
+				if(evt.detail == Alert.YES){
+					var delEvent:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.DELETE_PRODUCT,{prodID:_data.prodID,ppnl:this});
+					CairngormEventDispatcher.getInstance().dispatchEvent(delEvent);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{_bgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup paddingBottom="3" paddingTop="3" width="100%" fontSize="15" verticalAlign="middle" mouseOver="{sFill.color = AccessVars.instance().colBgColorOver}" mouseOut="{sFill.color=_bgColor}"
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtItemCode" width="65%" textAlign="center" paddingLeft="15" useHandCursor="true" buttonMode="true"/>
+		<s:Label id="txtCode" width="35%" textAlign="center" useHandCursor="true" buttonMode="true"/>
+		<!--<s:HGroup width="25%" horizontalAlign="center">
+			<s:Button label="Deactivate" icon="{DEFAULT_CLOSE_UP}" click="deleteClickHandler(event)"  useHandCursor="true" buttonMode="true" fontSize="8"/>
+		</s:HGroup>-->
+	</s:HGroup>
+	
+</s:Group>

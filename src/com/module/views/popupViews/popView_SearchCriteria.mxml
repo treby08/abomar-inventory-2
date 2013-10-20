@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center" paddingTop="3" paddingBottom="3" paddingLeft="5" paddingRight="5"/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.DataListEvent;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.panels.PopupPanel;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			
+			private var _sType:int = -1;
+			private var _mainComp:Object;
+			public var popPanel:PopupPanel;
+			
+			public function set sType(value:int):void{
+				_sType = value;
+			}
+			
+			public function get sType():int{
+				return _sType;
+			}
+			
+			public function set mainComp(value:Object):void{
+				_mainComp = value;
+			}
+			
+			public function get mainComp():Object{
+				return _mainComp;
+			}
+			
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				var log2:DataListEvent;
+				switch(_sType){
+					case 0:
+						purReq.visible = purReq.includeInLayout = true;
+						sDate.selectedDate = new Date();
+						eDate.selectedDate = new Date();
+						cmbStatus.dataProvider = AccessVars.instance().arrStat
+						cmbStatus.selectedIndex = 0;
+						if (AccessVars.instance().branches == null){
+							log2 = new DataListEvent(DataListEvent.GET_BRANCH_LIST2,{pBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+						}else
+							updateDataList();
+					break;
+					case 1:
+						purOrd.visible = purOrd.includeInLayout = true;
+						sDate_po.selectedDate = new Date();
+						eDate_po.selectedDate = new Date();
+						cmbStatusPO.dataProvider = AccessVars.instance().arrStat
+						cmbStatusPO.selectedIndex = 0;
+						if (AccessVars.instance().supplier == null){
+							log2 = new DataListEvent(DataListEvent.GET_SUPPLIERS_LIST,{pBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+						}else
+							updateDataList();
+					break;
+					case 2:
+						WRGrp.visible = WRGrp.includeInLayout = true;
+						sDate_wr.selectedDate = new Date();
+						eDate_wr.selectedDate = new Date();
+						if (AccessVars.instance().branches == null){
+							log2 = new DataListEvent(DataListEvent.GET_BRANCH_LIST2,{pBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+						}else
+							updateDataList();
+					break;
+					case 3:
+						WDGrp.visible = WDGrp.includeInLayout = true;
+						sDate_wd.selectedDate = new Date();
+						eDate_wd.selectedDate = new Date();
+						if (AccessVars.instance().branches == null){
+							log2 = new DataListEvent(DataListEvent.GET_BRANCH_LIST2,{pBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+						}else
+							updateDataList();
+					break;
+					case 4:
+						product.visible = product.includeInLayout = true;
+						if (AccessVars.instance().supplier == null){
+							log2 = new DataListEvent(DataListEvent.GET_SUPPLIERS_LIST,{pBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+						}else
+							updateDataList();
+					break;
+					case 5:
+						salesQuote.visible = salesQuote.includeInLayout = true;
+						sqDate.selectedDate = new Date();
+						eqDate.selectedDate = new Date();
+						cmbQStatus.dataProvider = AccessVars.instance().arrStat
+						cmbQStatus.selectedIndex = 0;
+						if (AccessVars.instance().customers == null){
+							var log3:UserEvent = new UserEvent(UserEvent.GET_CUSTOMER_LIST,{qBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+						}else
+							updateDataList();
+						break;
+					case 6:
+						salesInvoice.visible = salesInvoice.includeInLayout = true;
+						siDate.selectedDate = new Date();
+						eiDate.selectedDate = new Date();
+						cmbIStatus.dataProvider = AccessVars.instance().arrStat
+						cmbIStatus.selectedIndex = 0;
+						if (AccessVars.instance().customers == null){
+							var log3:UserEvent = new UserEvent(UserEvent.GET_CUSTOMER_LIST,{qBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+						}else
+							updateDataList();
+					break;
+				}
+			}
+			
+			protected function searchClickHandler(event:MouseEvent):void
+			{
+				var log:ItemsTransEvent;
+				var condition:String;
+				var onProcess:String;
+				var condExp:String
+				switch (_sType){
+					case 0:
+						var condPurReqID:String = (reqNo.text == "")?"":"purReqID = "+String(int(reqNo.text))+" OR ";
+						onProcess = cmbStatus.selectedItem.type==-1?"":" AND purReq_status="+cmbStatus.selectedItem.type;
+						condExp = cmbStatus.selectedItem.type==-1?"":"OR (dateTrans >='"+setDateFormat(sDate.selectedDate)+"' AND dateTrans <='"+setDateFormat(eDate.selectedDate)+"')";
+						condition = condPurReqID+"b.branchID ="+cmbBranch.selectedItem.branchID+onProcess+" "+condExp;
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_REQUISITION,{searchstr:"null",condition:condition,qBox:mainComp,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+					case 1:
+						var condPurOrdID:String = (PONo.text == "")?"":"purOrdID = "+String(int(PONo.text))+" OR ";
+						var onProcessPO:String = cmbStatusPO.selectedItem.type==-1?"":" AND purOrd_status="+cmbStatusPO.selectedItem.type;
+						condition = condPurOrdID+"po.purOrd_supID ="+cmbSupplier.selectedItem.supID+onProcessPO+" OR (po.dateTrans >='"+setDateFormat(sDate_po.selectedDate)+"' AND po.dateTrans <='"+setDateFormat(eDate_po.selectedDate)+"')";
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_WH_RECEIPT,{searchstr:"null",qBox:mainComp,condition:condition,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+					case 2:
+						var condWRID:String = (WRNo_wr.text == "")?"":"whrID = "+String(int(WRNo_wr.text))+" OR ";
+						condition = condWRID+"whr_branchID ="+cmbBranch_wr.selectedItem.branchID+" OR (whr_date >='"+setDateFormat(sDate_wr.selectedDate)+"' AND whr_date <='"+setDateFormat(eDate_wr.selectedDate)+"')";
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_WH_DISCREPANCY,{searchstr:"null",qBox:mainComp,condition:condition,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+					case 3:
+						var condWDID:String = (WDNo_wd.text == "")?"":"whdID = "+String(int(WDNo_wd.text))+" OR ";
+						condition = condWDID+"whr_branchID ="+cmbBranch_wd.selectedItem.branchID+" OR (wd.dateTrans >='"+setDateFormat(sDate_wd.selectedDate)+"' AND wd.dateTrans <='"+setDateFormat(eDate_wd.selectedDate)+"')";
+						log = new ItemsTransEvent(ItemsTransEvent.GET_EXIST_WH_DISCREPANCY,{searchstr:"null",qBox:mainComp,condition:condition,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+					case 4:
+						var condProd:String = (prodNo.text == "")?"":"prodCode LIKE '%"+String(int(prodNo.text))+"%' OR prodModel LIKE '%"+String(int(prodNo.text))+"%' AND ";
+						var inact:String = cbInactive.selected?"1":"0";
+						condition = condProd+"supplier ="+cmbProdSupplier.selectedItem.supID+" OR isDeleted="+inact
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_PRODUCT,{searchstr:"-1",pBox:mainComp,condition:condition,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+					case 5:
+						var condSQID:String = (salesQuoteNo.text == "")?"":"q.sq_quoteNo = "+String(int(salesQuoteNo.text))+" OR";
+						onProcess = cmbQStatus.selectedItem.type==-1?")":"AND sq_status="+cmbQStatus.selectedItem.type+")";
+						condExp = cmbQStatus.selectedItem.type!=-1?"":"OR (dateTrans >='"+setDateFormat(sqDate.selectedDate)+"' AND dateTrans <='"+setDateFormat(eqDate.selectedDate)+"')";
+						condition = condSQID+" "+"(q.sq_custID ="+cmbCustomer.selectedItem.custID+" "+onProcess+" "+condExp;
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_QUOTE,{searchstr:"null",condition:condition,qBox:mainComp,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+					case 6:
+						var condSIID:String = (salesQuoteNo.text == "")?"":"q.sq_quoteNo = "+String(int(salesInvoiceNo.text))+" OR";
+						onProcess = cmbIStatus.selectedItem.type==-1?")":"AND si_status="+cmbIStatus.selectedItem.type+")";
+						condExp = cmbIStatus.selectedItem.type!=-1?"":"OR (dateTrans >='"+setDateFormat(siDate.selectedDate)+"' AND dateTrans <='"+setDateFormat(eiDate.selectedDate)+"')";
+						condition = condSIID+" "+"(q.sq_custID ="+cmbICustomer.selectedItem.custID+" "+onProcess+" "+condExp;
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_SALES,{searchstr:"null",condition:condition,sBox:mainComp,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					break;
+				}
+				trace("condition",condition);
+				popPanel.cancelClickHandler(null);
+			}
+			
+			private function setDateFormat(d:Date):String{
+				var strDate:String="";
+				strDate = d.fullYear+"-"+String(d.month+1)+"-"+d.date;
+				return strDate;
+			}
+			
+			public function updateDataList():void{
+				if(AccessVars.instance().branches){
+					if (_sType == 0){
+						cmbBranch.dataProvider = AccessVars.instance().branches;			
+						cmbBranch.selectedIndex = 0;
+					}else if (_sType == 2){
+						cmbBranch_wr.dataProvider = AccessVars.instance().branches;			
+						cmbBranch_wr.selectedIndex = 0;
+					}else if (_sType == 3){
+						cmbBranch_wd.dataProvider = AccessVars.instance().branches;			
+						cmbBranch_wd.selectedIndex = 0;
+					}
+				}
+				if(AccessVars.instance().supplier){
+					if (_sType == 1){
+						cmbSupplier.dataProvider = AccessVars.instance().supplier;			
+						cmbSupplier.selectedIndex = 0;
+					}else if (_sType == 4){
+						cmbProdSupplier.dataProvider = AccessVars.instance().supplier;			
+						cmbProdSupplier.selectedIndex = 0;
+					}
+				}
+				
+				if(AccessVars.instance().customers){
+					if (_sType == 5){
+						cmbCustomer.dataProvider = AccessVars.instance().customers;
+						cmbCustomer.selectedIndex = 0;
+					}else if (_sType == 6){
+						cmbICustomer.dataProvider = AccessVars.instance().customers;
+						cmbICustomer.selectedIndex = 0;
+					}
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup id="purReq" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Requisition No." width="100" textAlign="right"/>
+			<s:TextInput id="reqNo" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Branch" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbBranch" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Status" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbStatus" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="sDate" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eDate" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="purOrd" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Purchase Order No." width="100" textAlign="right"/>
+			<s:TextInput id="PONo" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Supplier" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbSupplier" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Status" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbStatusPO" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="sDate_po" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eDate_po" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="WRGrp" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Warehouse Receipt No." width="100" textAlign="right"/>
+			<s:TextInput id="WRNo_wr" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Branch" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbBranch_wr" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="sDate_wr" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eDate_wr" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="WDGrp" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Warehouse Discrepancy No." width="100" textAlign="right"/>
+			<s:TextInput id="WDNo_wd" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Branch" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbBranch_wd" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="sDate_wd" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eDate_wd" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="product" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Item/Model No." width="100" textAlign="right"/>
+			<s:TextInput id="prodNo" width="100%"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Supplier" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbProdSupplier" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Inactive" width="100" textAlign="right"/>
+			<s:CheckBox id="cbInactive" selected="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="salesQuote" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Quote No." width="100" textAlign="right"/>
+			<s:TextInput id="salesQuoteNo" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Account No." width="100" textAlign="right"/>
+			<s:ComboBox id="cmbCustomer" width="100%" tabIndex="2" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Status" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbQStatus" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="sqDate" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eqDate" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="salesInvoice" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Invoice No." width="100" textAlign="right"/>
+			<s:TextInput id="salesInvoiceNo" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Customer" width="100" textAlign="right"/>
+			<s:ComboBox id="cmbICustomer" width="100%" tabIndex="2" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Status" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbIStatus" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="siDate" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eiDate" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<mx:HRule width="90%"/>
+	<s:HGroup>
+		<s:Button label="Search" click="searchClickHandler(event)"/>
+		<s:Button label="Close" click="popPanel.cancelClickHandler(event)"/>
+	</s:HGroup>
+</s:Group>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"
+				   creationComplete="creationCompleteHandler(event)">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		.VBoxBorder {
+			borderSkin: ClassReference("mx.skins.halo.HaloBorder");
+			borderStyle: solid;
+			borderSides: "left right";
+			borderWeight: 2px;
+			borderColor: #000000;
+		}
+		.topBorder {
+			borderSkin: ClassReference("mx.skins.halo.HaloBorder");
+			borderStyle: solid;
+			borderSides: "top";
+			borderWeight: 2px;
+			borderColor: #000000;
+		}
+	</fx:Style>
+	<s:HGroup width="100%" height="100%">
+		<!--<s:VGroup width="30%" height="100%">
+			
+		</s:VGroup>-->
+		<s:VGroup width="100%" height="100%">
+			<mx:Canvas id="parentCanvas" width="100%" height="100%" backgroundColor="0xCCCCCC" mouseOver="{zoomSlider.setFocus()}">
+				<s:HGroup width="100%" height="100%" paddingTop="10" paddingLeft="10" paddingRight="10" paddingBottom="10">
+					<mx:Canvas width="100%" height="100%" mouseOver="{Mouse.cursor = MouseCursor.HAND}" mouseOut="{Mouse.cursor = MouseCursor.ARROW}">
+						<mx:Canvas id="childCanvas" x="200" width="850" height="1100" backgroundColor="0xFFFFFF" borderStyle="outset" borderAlpha="1"/>
+							
+					</mx:Canvas>
+					
+				</s:HGroup>
+			</mx:Canvas>
+			<s:HGroup width="100%" horizontalAlign="center" verticalAlign="middle" height="40">
+				<s:Label text="Order Type: " visible="false" includeInLayout="false"/>
+				<s:Spacer width="10"/>
+				<s:Label text="Zoom: "/>
+				<s:HGroup width="200" horizontalAlign="center" horizontalCenter="0">
+					<s:Label text="o"/>
+					<s:HSlider id="zoomSlider" width="100%" maximum="250" minimum="25" value="100" dataTipFormatFunction="dataTipFormat" change="zoomHandler(event)"/>
+					<s:Label text="O"/>
+				</s:HGroup>
+				<s:Spacer width="10"/>
+				<s:Button label="Print" click="printPrevPO()"/>
+				<s:Button label="Save" click="savePreview()" visible="false" includeInLayout="false"/>
+				<s:Button label="Close" click="closeHandler(event)"/>
+			</s:HGroup>
+		</s:VGroup>
+		
+	</s:HGroup>
+	<fx:Script>
+		<![CDATA[
+			import com.module.views.printViews.PrintInvoice;
+			import com.module.views.printViews.PrintPayment;
+			import com.module.views.printViews.PrintPurchaseOrder;
+			import com.module.views.printViews.PrintPurchaseRequisition;
+			import com.module.views.printViews.PrintWHDiscrepancy;
+			import com.module.views.printViews.PrintWHReceipt;
+			
+			import flashx.textLayout.formats.WhiteSpaceCollapse;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			import mx.printing.FlexPrintJob;
+			import mx.printing.FlexPrintJobScaleType;
+			
+			import org.alivepdf.display.Display;
+			import org.alivepdf.layout.Mode;
+			import org.alivepdf.layout.Orientation;
+			import org.alivepdf.layout.Position;
+			import org.alivepdf.layout.Resize;
+			import org.alivepdf.layout.Size;
+			import org.alivepdf.layout.Unit;
+			import org.alivepdf.pages.Page;
+			import org.alivepdf.pdf.PDF;
+			import org.alivepdf.saving.Method;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.utils.TextFlowUtil;
+			
+			private var parentCanvasWidth:Number;
+			private var parentCanvasHeight:Number;
+			private var childCanvasWidth:Number;
+			private var childCanvasHeight:Number;
+			private var _orderTypeID:int = 0;
+			private var _salesBox:Object;
+			private var arrOrderType:ArrayCollection = new ArrayCollection(
+				[{name:"Purchase Order",type:0},{name:"Warehouse Receipt",type:1},
+				{name:"Invoice",type:2},{name:"Warehouse Discrepancy",type:3},
+				{name:"Payment",type:4},{name:"Purchase Requisition",type:5}])
+			
+			public function set boxType(value:Object):void{
+				_salesBox = value;
+			}
+			public function set orderTypeID(value:int):void{
+				_orderTypeID = value;
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				childCanvas.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
+				childCanvas.addEventListener(MouseEvent.MOUSE_UP,mouseUpHandler);
+				
+				var rect:Rectangle = parentCanvas.getBounds(this);
+				parentCanvasWidth = rect.width;
+				parentCanvasHeight = rect.height;
+				
+				rect = childCanvas.getBounds(parentCanvas);
+				childCanvasWidth = rect.width;
+				childCanvasHeight = rect.height;
+				
+				childCanvas.x = parentCanvasWidth/2 - childCanvasWidth/2;
+				
+				switch(_orderTypeID){
+					case 0:// PO
+						var pntPO:PrintPurchaseOrder = new PrintPurchaseOrder();
+						pntPO.salesBox = _salesBox as Object;
+						pntPO.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
+						childCanvas.addElement(pntPO);
+					break;
+					case 1:// WH Receipt
+						var pntWHR:PrintWHReceipt = new PrintWHReceipt();
+						pntWHR.salesBox = _salesBox as WareReceiptBox;
+						pntWHR.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
+						childCanvas.addElement(pntWHR);
+					break;
+					case 2:// Invoice
+						var pntInv:PrintInvoice = new PrintInvoice();
+						pntInv.salesBox = _salesBox ;//as InvoiceBox;
+						pntInv.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
+						childCanvas.addElement(pntInv);
+					break;
+					case 3:// Warehouse Discrepancy
+						var pntWHD:PrintWHDiscrepancy = new PrintWHDiscrepancy();
+						pntWHD.salesBox = _salesBox as WareDiscrepancyBox;
+						pntWHD.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
+						childCanvas.addElement(pntWHD);
+					break;
+					case 4:// Payment
+						var pntPay:PrintPayment = new PrintPayment();
+						pntPay.salesBox = _salesBox as PaymentBox;
+						pntPay.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
+						childCanvas.addElement(pntPay);
+					break;
+					case 5:// Purchase Requisition
+						var pntPR:PrintPurchaseRequisition = new PrintPurchaseRequisition();
+						pntPR.salesBox = _salesBox as PurchaseReqBox;
+						pntPR.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
+						childCanvas.addElement(pntPR);
+					break;
+				}
+				
+				//childCanvas.y = parentCanvasHeight/2 - childCanvasHeight/2;
+				//cmbOrderType.selectedIndex = _orderTypeID;
+				//OrderTypechangeHandler(null);
+				//setData();
+			}
+			
+			private function zoomHandler(event:Event):void {
+				childCanvas.scaleX = event.target.value/100;
+				childCanvas.scaleY = event.target.value/100;
+				
+				/*var parentCanvasCenter:Point = new Point(parentCanvas.width/2,parentCanvas.height/2);
+				
+				var childCanvasCenter:Point = new Point(childCanvas.width/2, childCanvas.height/2);
+				
+				var center:Point = parentCanvasCenter.subtract(childCanvasCenter);
+				trace(center.x + ", " + center.y);
+				childCanvas.x = center.x;
+				childCanvas.y = center.y;	*/
+			}
+			
+			
+			private function mouseDownHandler(event:MouseEvent):void {	
+				childCanvas.startDrag();
+			}
+			
+			private function mouseUpHandler(event:MouseEvent):void {
+				childCanvas.stopDrag();	
+				childCanvas.localToContent(new Point(event.localX,event.localY));
+				//childCanvas.y = event.localY;
+			}
+			
+			protected function closeHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			
+			protected function dataTipFormat(value:Number):Object
+			{
+				return value+"%";
+			}
+			
+			private function CurrentDateTimeString():String
+			{               
+				var CurrentDateTime:Date = new Date();
+				var CurrentDF:DateFormatter = new DateFormatter();
+				CurrentDF.formatString = "MMMM DD, YYYY"
+				var DateTimeString:String = CurrentDF.format(CurrentDateTime);
+				return DateTimeString;
+			}
+			
+			
+			
+			protected function printPrevPO():void
+			{				
+				var printJob:FlexPrintJob = new FlexPrintJob();
+				if (printJob.start() != true) return;
+				
+				/*if (txtRef.text=="")
+					txtRef.prompt = "";
+				if (txtTerm.text=="")
+					txtTerm.prompt = "";*/
+				
+				printJob.printAsBitmap = false;
+				printJob.addObject(childCanvas, FlexPrintJobScaleType.SHOW_ALL); 
+				printJob.send();
+			}
+			protected function savePreview():void
+			{
+				var fileRefPDF:PDF = new PDF(Orientation.PORTRAIT, Unit.INCHES, Size.LETTER);
+				var pg:Page = new Page(Orientation.PORTRAIT,Unit.INCHES, Size.LETTER);
+				pg.size = new Size([850,1100],"Letter",[8.5,11],[215.9,279.4]);
+				//var re:Resize = new Resize(Mode.FIT_TO_PAGE,Position.LEFT);
+				fileRefPDF.addPage(pg);
+				fileRefPDF.setTopMargin(0);
+				fileRefPDF.setBottomMargin(0);
+				fileRefPDF.setRightMargin(0);
+				fileRefPDF.setLeftMargin(0);
+				fileRefPDF.addImage(childCanvas,null,0,0,0,0,0,1,false);//,re,0,0,850,1100);
+				fileRefPDF.setCreator("UFlip Media")
+				var bytes:ByteArray = fileRefPDF.save(Method.LOCAL);
+				var file:FileReference = new FileReference();
+				file.addEventListener(Event.COMPLETE,saveComplete);
+				file.save(bytes,"Abomar-"+String(arrOrderType.getItemAt(_orderTypeID).name)+".pdf");
+			}
+			
+			protected function saveComplete(event:Event):void
+			{
+				Alert.show("Save Complete","PDF Saved");
+			}
+			
+		]]>
+	</fx:Script>
+</s:BorderContainer>
