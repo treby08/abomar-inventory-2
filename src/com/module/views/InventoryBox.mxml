@@ -40,6 +40,9 @@
 					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
 				}else
 					updateDataList();
+				
+				dfDateFr.selectedDate = new Date();
+				dfDateTo.selectedDate = new Date();
 			}
 			
 			public function updateDataList():void{
