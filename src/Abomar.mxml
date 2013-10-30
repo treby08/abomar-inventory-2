@@ -212,10 +212,10 @@
 						objBox = new SupplierBox();
 						_cnv.label = "Suppliers";
 						break;
-					/* case 6:
-						objBox = new ReportBox();
-						_cnv.label = "Report";
-					break; */
+					case 7:
+						objBox = new InventoryBox();
+						_cnv.label = "Stocks";
+					break;
 					default:
 						return;
 					break;

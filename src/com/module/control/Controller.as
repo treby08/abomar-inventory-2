@@ -23,6 +23,7 @@ package com.module.control
 			addCommand( DataListEvent.GET_BRANCH_LIST2, DataListCommand );
 			addCommand( DataListEvent.GET_REMARKS_LIST, DataListCommand );
 			addCommand( DataListEvent.GET_SUPPLIERS_LIST, DataListCommand );
+			addCommand( DataListEvent.GET_STOCK_LIST, DataListCommand );
 			addCommand( DataListEvent.GET_INVOICE_LIST, DataListCommand );
 			addCommand( DataListEvent.ADD_BRANCH, DataListCommand );
 			addCommand( DataListEvent.EDIT_BRANCH, DataListCommand );

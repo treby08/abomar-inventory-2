@@ -12,6 +12,7 @@ package com.module.events
 		public static var GET_SUPPLIERS_LIST:String = "get_suppliers_list";
 		public static var GET_REMARKS_LIST:String = "get_remark_list";
 		public static var GET_INVOICE_LIST:String = "get_invoice_list";
+		public static var GET_STOCK_LIST:String = "get_stock_list";
 		
 		public static var ADD_BRANCH:String = "add_branch";
 		public static var EDIT_BRANCH:String = "edit_branch";

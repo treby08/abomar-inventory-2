@@ -41,6 +41,10 @@ package com.module.commands
 					obj.type = "invoice";
 					DataListDelegate.instance().getDatalist((event as DataListEvent).params);
 				break;
+				case DataListEvent.GET_STOCK_LIST:
+					obj.type = "stocks";
+					DataListDelegate.instance().getDatalist((event as DataListEvent).params);
+				break;
 				
 				case DataListEvent.ADD_BRANCH:
 					obj.type = "add";

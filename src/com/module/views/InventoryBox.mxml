@@ -1,9 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		  xmlns:s="library://ns.adobe.com/flex/spark" paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10"
-		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%">
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
-	<s:Label text="Inventory" fontWeight="bold" fontSize="18" fontStyle="italic"/>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.DataListEvent;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			private var arrType:ArrayCollection = new ArrayCollection(['Both','In','Out']);
+			
+			protected function search_clickHandler(event:MouseEvent):void
+			{
+				var condition:String = "WHERE su.stock_branchID="+cmbBranch.selectedItem.branchID+" AND (su.updateDate>='"+setDateFormat(dfDateFr.selectedDate)+"' AND su.updateDate<='"+setDateFormat(dfDateTo.selectedDate)+"')";
+				var log2:DataListEvent = new DataListEvent(DataListEvent.GET_STOCK_LIST,{pBox:this,condition:condition})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+			}
+			
+			public function setDateFormat(d:Date):String{
+				var strDate:String="";
+				//strDate = String(d.month+1)+"/"+d.date+"/"+d.fullYear;
+				var mon:String = (d.month+1)<10?"0"+String(d.month+1):String(d.month+1);
+				var dat:String = (d.date)<10?"0"+String(d.date):String(d.date);
+				strDate = d.fullYear+"-"+mon+"-"+dat;
+				return strDate;
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				if (AccessVars.instance().branches == null){
+					var log2:DataListEvent = new DataListEvent(DataListEvent.GET_BRANCH_LIST2,{pBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				}else
+					updateDataList();
+			}
+			
+			public function updateDataList():void{
+				if(AccessVars.instance().branches)
+					cmbBranch.dataProvider = AccessVars.instance().branches;
+				cmbBranch.selectedIndex = 0;
+			}
+			
+			public function setDataProvider(arr:ArrayCollection):void{
+				dg.dataProvider = arr;
+			}
+			
+			private function mycmbBraLabelFunction(item:Object):String{
+				return (item)?item.bCode+" - "+item.bLocation:"";
+			}
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+		<s:layout>
+			<s:VerticalLayout paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5"/>
+		</s:layout>
+		<s:borderStroke> 
+			<mx:SolidColorStroke color="{AccessVars.instance().borderStrokeColor}" weight="2"/> 
+		</s:borderStroke> 
+		<s:Label text="Stock" fontWeight="bold" fontSize="18" fontStyle="italic"/>
+		<s:HGroup verticalAlign="middle">
+				<s:Label text="Branch:"/>
+				<s:ComboBox id="cmbBranch" width="150" tabIndex="0" labelField="label" labelFunction="mycmbBraLabelFunction"/>
+				<s:Label text="Date From:"/>
+				<mx:DateField id="dfDateFr" width="140" showToday="true"/>
+				<s:Label text="Date To:"/>
+				<mx:DateField id="dfDateTo" width="140" showToday="true"/>
+				<!--<s:ComboBox id="cmbType" width="100" tabIndex="1" dataProvider="{arrType}" selectedIndex="0"/>-->
+			<s:Button label="Show Result" buttonMode="true" click="search_clickHandler(event)"/>
+		</s:HGroup>
+		<s:DataGrid id="dg" width="100%" height="100%" minHeight="200" sortableColumns="false" textAlign="center" fontSize="12" editable="false">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn width="40" dataField="num" headerText="No." headerRenderer="com.module.renderer.GridHeadRenderer"/>
+					<s:GridColumn dataField="date" headerText="Date" width="120"  headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="center"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					<s:GridColumn dataField="branchName" headerText="Branch" width="180" headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="left"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					<s:GridColumn dataField="prodName" headerText="Product" width="200" headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="left"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					<s:GridColumn dataField="qtyAdd" headerText="Credit" headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="right"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+					<s:GridColumn dataField="qtyDed" headerText="Debit" headerRenderer="com.module.renderer.GridHeadRenderer">
+						<s:itemRenderer>
+							<fx:Component>
+								<s:DefaultGridItemRenderer textAlign="right"/>
+							</fx:Component>
+						</s:itemRenderer>
+					</s:GridColumn>
+				</s:ArrayList>
+			</s:columns>
+		</s:DataGrid>
+		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="center">
+			<s:Button label="View/Print"/>
+		</s:HGroup>
+	</s:BorderContainer>
 </s:VGroup>
