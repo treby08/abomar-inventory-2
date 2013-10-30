@@ -37,7 +37,6 @@
 			<sub name="Invoice List" code="rep_sal_nsi"/>
 			<sub name="Payment List" code="rep_sal_pay"/>
 		</sub>
-		<sub name="Customers List" code="cus_lst"/>	
-		<sub name="Branches List" code="branch"/>
+		<sub name="Stocks" code="stk_lst"/>
 	</main>
 </root>

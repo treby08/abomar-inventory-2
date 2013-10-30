@@ -150,6 +150,9 @@
 					case "branch":		
 						AccessVars.instance().mainApp.appChange(null,5,String(event.item.@code));
 					break;
+					case "stk_lst":		
+						AccessVars.instance().mainApp.appChange(null,7,String(event.item.@code));
+					break;
 					
 				}
 			}

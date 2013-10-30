@@ -146,6 +146,7 @@ package com.module.business
 						_profPanel.pBox = null;
 						_profPanel = null;
 					}
+					
 					break;
 				case "remarks":
 					for each (obj in listXML.children()){
@@ -173,7 +174,39 @@ package com.module.business
 						if (arrCol.length != 0)
 							_profPanel.pBox.addPayItem();
 					}
-					break;
+				break;
+				case "invoice":
+					/*
+					<item bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" prodModel=\"".$row['prodModel']."\" 
+					prodCode=\"".$row['prodCode']."\" stock_prodID=\"".$row['stock_prodID']."\" addedStock=\"".$row['addedStock']."\" 
+					deductStock=\"".$row['deductStock']."\" date=\"".$row['updateDate']."\" time=\"".$row['updateTime']."\" 
+					branchId=\"".$row['stock_branchID']."\"/> 
+					*/
+					var i:int = 1;
+					for each (obj in listXML.children()){
+						arrObj = new Object;
+						arrObj.num = i;
+						arrObj.branchName = obj.@bCode+" - "+obj.@bLocation;
+						arrObj.prodName = obj.@prodModel+" - "+obj.@prodCode;
+						arrObj.prodID = obj.@stock_prodID;
+						arrObj.refID = obj.@stock_refID;
+						arrObj.qtyAdd = obj.@addedStock;
+						arrObj.qtyDed = obj.@deductStock;
+						arrObj.date = obj.@date;
+						arrObj.time = obj.@time;
+						arrObj.branchId = obj.@branchId;
+						
+						arrCol.addItem(arrObj);
+						i++;
+					}
+					if(_profPanel && _profPanel.pBox){
+						if (_profPanel.pBox){
+							_profPanel.pBox.setDataProvider(arrCol);
+							_profPanel.pBox = null;
+							_profPanel = null;
+						}
+					}
+				break;
 			}
 			
 		}
