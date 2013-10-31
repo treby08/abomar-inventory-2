@@ -175,7 +175,7 @@ package com.module.business
 							_profPanel.pBox.addPayItem();
 					}
 				break;
-				case "invoice":
+				case "stocks":
 					/*
 					<item bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" prodModel=\"".$row['prodModel']."\" 
 					prodCode=\"".$row['prodCode']."\" stock_prodID=\"".$row['stock_prodID']."\" addedStock=\"".$row['addedStock']."\" 
