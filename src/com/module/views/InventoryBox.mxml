@@ -136,7 +136,7 @@
 			<s:Label id="lblTotalOut" width="100" paddingRight="3"/>
 		</s:HGroup>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="center">
-			<s:Button label="View/Print"/>
+			<s:Button label="View/Print" enabled="false"/>
 		</s:HGroup>
 	</s:BorderContainer>
 </s:VGroup>
