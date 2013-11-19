@@ -1,0 +1,1 @@
+<?php echo "This is a service folder for Abomar Equipment only"; ?>
