@@ -131,9 +131,9 @@
 			</s:columns>
 		</s:DataGrid>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="center">
-			<s:Label text="TOTAL:" width="100%" textAlign="right" paddingRight="10"/>
-			<s:Label id="lblTotalIn" width="100" paddingRight="3"/>
-			<s:Label id="lblTotalOut" width="100" paddingRight="3"/>
+			<s:Label text="TOTAL : " width="100%" textAlign="right" paddingRight="10" fontSize="16" fontWeight="bold"/>
+			<s:Label id="lblTotalIn" width="100" paddingRight="3" textAlign="right" fontSize="14" fontWeight="bold"/>
+			<s:Label id="lblTotalOut" width="100" paddingRight="3" textAlign="right" fontSize="14" fontWeight="bold"/>
 		</s:HGroup>
 		<s:HGroup width="100%" verticalAlign="middle" horizontalAlign="center">
 			<s:Button label="View/Print" enabled="false"/>
