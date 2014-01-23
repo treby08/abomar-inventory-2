@@ -153,6 +153,10 @@
 					case "stk_lst":		
 						AccessVars.instance().mainApp.appChange(null,7,String(event.item.@code));
 					break;
+					case "cr_memo":		
+					case "dr_memo":		
+						AccessVars.instance().mainApp.appChange(null,8,String(event.item.@code));
+					break;
 					
 				}
 			}
