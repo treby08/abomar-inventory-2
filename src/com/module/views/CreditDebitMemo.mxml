@@ -1,0 +1,843 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009" minWidth="1000" minHeight="550"
+		  xmlns:s="library://ns.adobe.com/flex/spark" paddingLeft="10" paddingRight="10" initialize="init()"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" creationComplete="creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.DataListEvent;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.renderer.PurchaseReqListRenderer;
+			import com.module.renderer.PurchaseReqRenderer;
+			import com.module.views.panels.PopupPanel;
+			import com.module.views.panels.ProductPricePanel;
+			import com.variables.AccessVars;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.printing.FlexPrintJob;
+			import mx.printing.FlexPrintJobScaleType;
+			
+			import spark.components.Application;
+			import spark.events.GridEvent;
+			import spark.events.GridItemEditorEvent;
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+			private var _totalQty:int = 0;
+			public var _type:int = 0; 
+			public var _data:Object;
+			private var _fromUpdate:Boolean = false;
+			public var theOwner:Object;
+			public var _reqNo:String = "000";
+			[Bindable]
+			public var _memoType:String = "Credit";
+			public var isProcess:Boolean = false;
+			//private var _prodID:String;
+			
+			public function set reqNo(val:String):void{
+				_reqNo = val;
+			}
+			public function get reqNo():String{
+				return _reqNo;
+			}
+			public function set memoType(val:String):void{
+				_memoType = val;
+			}
+			public function get memoType():String{
+				return _memoType;
+			}
+			
+			private function init():void{
+				if (!isProcess){
+					var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_PRODUCT,{searchstr:"",condition:"",sBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log);
+				}
+				if(AccessVars.instance().branches == null){
+					var log2:DataListEvent = new DataListEvent(DataListEvent.GET_BRANCH_LIST2,{pBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				}else
+					updateDataList()
+			}
+			
+			public function updateDataList():void{
+				if(AccessVars.instance().branches){
+					cmbBranchOrig.dataProvider = AccessVars.instance().branches;
+					cmbBranchOrig.labelFunction = mycmbBraLabelFunction;					
+					cmbBranchOrig.selectedIndex = (!isProcess)?0:-1;
+					
+					cmbBranchDesti.dataProvider = AccessVars.instance().branches;
+					cmbBranchDesti.labelFunction = mycmbBraLabelFunction;					
+					cmbBranchDesti.selectedIndex = (!isProcess)?0:-1;
+					genReqNoCode();
+				}
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				dfDate.selectedDate = new Date();
+				if (!isProcess){
+					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_NUMBER,{qBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+					
+				}else{
+					cont.visible = false;
+					prodBox.visible = prodBox.includeInLayout = false;
+					dg.editable = false;
+					dg.doubleClickEnabled = false;
+					hgControl.visible = false;
+					txtPrepBy.editable = false;
+					txtAppBy.editable = false;
+					dfDate.editable = dfDate.enabled = false;
+					gcRemove.visible = false;
+					cmbBranchDesti.enabled = false;
+					cmbBranchOrig.enabled = false;
+				}
+				
+				
+				
+			}
+			
+			public function genReqNoCode():void{
+				/*if (cmbBranch && txtReqNo && cmbBranch.dataProvider && (cmbBranch.dataProvider as ArrayCollection).length > 0 && cmbBranch.selectedItem){
+					var yr:String = String(dfDate.selectedDate.getFullYear());
+					txtReqNo.text = cmbBranch.selectedItem.bCode+"-"+yr.substr(2)+"-"+_reqNo;
+				}*/
+			}
+			
+			public function setDataProvider(arr:ArrayCollection,type:int):void{
+				if (type == 0){
+					cmbProd.dataProvider = arr;
+					cmbProd.labelFunction = mycmbProdLabelFunction;
+				}else if (type == 1){
+					cmbBranchOrig.dataProvider = arr;
+					cmbBranchOrig.labelFunction = mycmbBraLabelFunction;					
+					cmbBranchOrig.selectedIndex = (!isProcess)?0:-1;
+					cmbBranchDesti.dataProvider = arr;
+					cmbBranchDesti.labelFunction = mycmbBraLabelFunction;					
+					cmbBranchDesti.selectedIndex = (!isProcess)?0:-1;
+					genReqNoCode();
+				}else if (type == 3){
+					dg.dataProvider = arr;
+					dg.validateDisplayList();
+					numItems.text = "0";
+					var vat:Number = 0;			
+					var _subTot:Number = 0;	
+					_totalQty = 0;
+					
+					for each (var item:Object in arr){						
+						_subTot += Number(item.total);
+						vat += Number(Number(item.total)*0.12);
+						_totalQty+=Number(item.qty);
+						
+					}
+					
+					numItems.text = String(_totalQty);
+					if (isProcess)
+						printPrevPO();
+				}
+			}
+			
+			private var _arrCol:ArrayCollection;
+			public function set dataCollection(arrCol:ArrayCollection):void{
+				_arrCol = arrCol
+				
+				/*if (dgSearch.numElements > 0){
+					dgSearch.removeAllElements();
+				}
+				if (arrCol.length > 0){
+					var obj:Object;
+					if (isProcess){
+						var itemRend:PurchaseReqListRenderer;
+						for each (obj in arrCol){
+							itemRend = new PurchaseReqListRenderer()
+							itemRend.data = obj;
+							itemRend.theBox = this
+							dgSearch.addElement(itemRend);
+						}
+					}else{
+						var itemUser:PurchaseReqRenderer;
+						for each (obj in arrCol){
+							itemUser = new PurchaseReqRenderer()
+							itemUser.data = obj;
+							itemUser.theBox = this
+							dgSearch.addElement(itemUser);
+						}
+					}
+				}*/
+			}
+			
+			public function setSelectedBranch(bID:String):void{
+				/*for each (var item:Object in cmbBranch.dataProvider as ArrayCollection){
+					trace(item.branchID," == ",bID)
+					if (item.branchID == bID){
+						cmbBranch.selectedItem = item;
+						break;
+					}	
+				}*/
+			}
+			
+			public function removeItemHandler(obj:Object):void{
+				/*txtSubtot.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))- obj.total);
+				txtVat.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))*0.12);
+				txtGT.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))+Number(txtVat.text.replace(/\b,\b/g,"")));
+				*/
+				_totalQty = Number(Number(numItems.text) - obj.qty);
+				var item:Object;
+				
+				//revert stock count
+				/*for each (item in cmbProd.dataProvider as ArrayCollection){
+					if (item.prodID == obj.prodDBID){
+						item.stockCnt= Number(item.stockCnt)+Number(obj.qty);
+						(cmbProd.dataProvider as ArrayCollection).itemUpdated(item);
+						(cmbProd.dataProvider as ArrayCollection).refresh();
+						txtQty.value = 0;
+						txtPrice.text = txtSub.text = "0.00";
+						break;
+					}
+				}*/
+				
+				numItems.text = String(_totalQty);
+				var num:int=1;
+				for each(item in dg.dataProvider as ArrayCollection){
+					item.num =num;
+					num++;
+				}
+			}
+			
+			private function mycmbProdLabelFunction(item:Object):String{
+				return (item)?item.pCode +" - "+item.modelNo:"";
+			}
+			private function mycmbBraLabelFunction(item:Object):String{
+				return (item)?item.bCode+" - "+item.bLocation:"";
+			}
+			
+			protected function cmbProdchangeHandler(event:IndexChangeEvent):void
+			{
+				if (cmbProd.selectedItem == null) return;
+				var obj:Object = cmbProd.selectedItem;
+				txtPrice.text = obj.listPrice;
+				//_prodID = obj.prodID
+				//txtStock.text =  obj.stockCnt;
+				//txtQty.maximum = Number(obj.stockCnt);
+				if (txtQty.value !=0){
+					txtQtychangeHandler(null);
+				}
+			}
+			
+			protected function txtQtychangeHandler(event:Event):void
+			{
+				if (txtQty.value == 0) return;
+				
+				
+				//txtSub.text = numFmttr.format(Number(txtPrice.text)*int(txtQty.value));
+				btnAdd.setFocus();
+				/* if ()
+				btnAdd.addEventListener(KeyboardEvent.KEY_UP,btnAdd_keyUpHandler); */
+			}
+			
+			private function roundDec(numIn:Number, decimalPlaces:int = 2):Number {
+				var nExp:int = Math.pow(10,decimalPlaces) ; 
+				var nRetVal:Number = Math.round(numIn * nExp) / nExp
+				return nRetVal;
+			}		
+			
+						
+			protected function btnAddclickHandler(event:MouseEvent):void
+			{	
+				if (cmbProd.selectedItem == null || txtQty.value == 0) return;
+				var arrCol:ArrayCollection;
+				var items:Object;
+				if (dg.dataProvider == null)
+					arrCol = new ArrayCollection();
+				else
+					arrCol = dg.dataProvider as ArrayCollection;
+				
+				var obj:Object = cmbProd.selectedItem;
+				
+				if (arrCol.length > 0){
+					var sameItem:Object
+					for each (items in arrCol){
+						if (items.prodDBID == obj.prodID || items.prd_prodID == obj.prodID){
+							sameItem = items;
+							break;
+						}
+					}
+					
+					if (sameItem){
+						sameItem.qty=Number(sameItem.qty)+ txtQty.value;
+						sameItem.total = sameItem.price * sameItem.qty;
+						arrCol.itemUpdated(sameItem);
+					}else
+						arrCol.addItem({num:arrCol.length+1,prodDBID:obj.prodID,prodID:obj.pCode,modelNo:obj.modelNo,prodDesc:obj.desc,qty:txtQty.value,price:txtPrice.text.replace(/\b,\b/g,"")});
+				}else
+					arrCol.addItem({num:arrCol.length+1,prodDBID:obj.prodID,prodID:obj.pCode,modelNo:obj.modelNo,prodDesc:obj.desc,qty:txtQty.value,price:txtPrice.text.replace(/\b,\b/g,"")});
+				
+				//cmbProd.selectedItem.stockCnt -=txtQty.value;
+				//cmbProd.dataProvider.itemUpdated(cmbProd.selectedItem);
+				//trace("txtPrice.text",txtPrice.text)
+				//arrCol.addItem({num:arrCol.length+1,prodDBID:obj.prodID,prodID:obj.pCode,modelNo:obj.modelNo,prodDesc:obj.desc,qty:txtQty.value,price:txtPrice.text.replace(/\b,\b/g,""),vat:txtVat.text.replace(/\b,\b/g,""),total:txtSub.text.replace(/\b,\b/g,"")});
+				dg.dataProvider = arrCol;
+				
+				/*txtSubtot.text = numFmttr.format(Number(txtSub.text.replace(/\b,\b/g,""))+Number(txtSubtot.text.replace(/\b,\b/g,"")));
+				txtVat.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))*0.12);
+				txtGT.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))+Number(txtVat.text.replace(/\b,\b/g,"")));
+				*/
+				_totalQty =0;
+				for each (items in arrCol){
+					_totalQty += Number(items.qty);
+				}
+				numItems.text = String(_totalQty);
+				cmbProd.selectedIndex = -1;
+				cmbProd.textInput.text = "";
+				txtQty.value = 0;
+				txtPrice.text =  "0.00";
+				txtQtychangeHandler(null);
+				//txtStock.text = "0";
+				cmbProd.setFocus();
+			}
+			
+			protected function CheckOutclickHandler(event:MouseEvent):void
+			{
+				if (dg.dataProviderLength == 0){
+					Alert.show("Item List is Empty","Submit Memo Error");
+					return;
+				}
+				if (cmbBranchOrig.selectedIndex == -1){
+					Alert.show("No Original Branch Selected","Submit Memo Error");
+					return;
+				}
+				if (cmbBranchDesti.selectedIndex == -1){
+					Alert.show("No Destination Branch Selected","Submit Memo Error");
+					return;
+				}
+				/*
+				$purReq_branchID = $_REQUEST['purReq_branchID'];
+				$preparedBy = $_REQUEST['preparedBy'];
+				$approvedBy = $_REQUEST['approvedBy'];
+				$dateTrans = $_REQUEST['dateTrans'];
+				$totalAmt = $_REQUEST['totalAmt']; 
+				*/
+				var obj:Object = {}
+				obj.memoOrig_branchID = cmbBranchOrig.selectedItem.branchID;
+				obj.memoDesti_branchID = cmbBranchDesti.selectedItem.branchID;
+				obj.preparedBy = txtPrepBy.text;
+				obj.approvedBy = txtAppBy.text;
+				obj.dateTrans = setDateFormat(dfDate.selectedDate);
+				//obj.totalAmt = txtGT.text.replace(/\b,\b/g,"");
+				//obj.vat = txtVat.text.replace(/\b,\b/g,"");
+				var strItem:Array = new Array();
+				for each (var item:Object in dg.dataProvider){
+					strItem.push(item.prodDBID+"|"+item.qty+"|"+item.prdID);
+				}
+				obj.memoDetails = strItem.join("||");
+				trace("obj.memoDetails:",obj.memoDetails)
+				var log2:ItemsTransEvent;
+				if (_type==0){
+					log2 = new ItemsTransEvent(ItemsTransEvent.ADD_REQUISITION,obj)
+					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				}else if (_type==1){
+					obj.memoID = _data.memoID;
+					obj.pBox = this;
+					_fromUpdate = true;
+					log2 = new ItemsTransEvent(ItemsTransEvent.EDIT_REQUISITION,obj)
+					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				}
+				
+				//printPrevPO()
+			}
+				
+			public function setDateFormat(d:Date):String{
+				var strDate:String="";
+				//strDate = String(d.month+1)+"/"+d.date+"/"+d.fullYear;
+				var mon:String = (d.month+1 < 10)?"0"+String(d.month+1):String(d.month+1);
+				var dat:String = (d.date < 10)?"0"+String(d.date):String(d.date);
+				strDate = d.fullYear+"-"+mon+"-"+dat;
+				return strDate;
+			}
+			
+			protected function printPrevPO():void
+			{
+				var _printBox:PrintPrevBox = new PrintPrevBox();
+				_printBox.boxType = this;
+				_printBox.orderTypeID = 5;
+				_printBox.width = AccessVars.instance().mainApp.width-5;
+				_printBox.height = AccessVars.instance().mainApp.height-5;
+				PopUpManager.addPopUp(_printBox,this,true);
+			}
+			
+			public function clearFields(event:MouseEvent):void{
+				
+				if (_fromUpdate){
+					_fromUpdate = false;
+					
+					/*_data.modelNo = txtItemModNo.text;
+					_data.pCode = txtItemCode.text;
+					_data.subNum = txtSubNum.text;
+					_data.comModUse = txtComModUse.text;
+					_data.supplier = txtSupplier.text;
+					_data.remarks = cbNotCD.selected+"|"+cbNotAvail.selected+"|"+cbOthers.selected+"|"+txtOthers.text;
+					_data.pDate = setDateFormat(dfDate.selectedDate);
+					_data.factor = txtFactor.text;
+					
+					_data.imgPath = txtImagePath.text;
+					_data.weight = txtWeight.text;
+					_data.size = txtSize.text;
+					_data.stockCnt = txtStock.text;
+					_data.returnable = cbReturn.selected?1:0;
+					_data.inactive = cbInactive.selected;
+					
+					_data.listPrice = txtLstPrice.text;				
+					_data.dealPrice = txtDealPrice.text;				
+					_data.srPrice = txtSRP.text;
+					_data.priceCurr = cmbLstCurr.selectedIndex+"|"+cmbDealCurr.selectedIndex;*/
+					
+					(theOwner as PurchaseReqRenderer).data = _data;
+					(theOwner as PurchaseReqRenderer).creationCompleteHandler(null);
+					return;
+				}
+				viewOnly(true)
+					
+				txtAppBy.text = "";
+				txtPrepBy.text = "";
+				cmbBranchDesti.selectedIndex = -1;
+				cmbBranchOrig.selectedIndex = -1;
+				cmbProd.selectedIndex = -1;
+				cmbProd.textInput.text = "";				
+				txtQty.textDisplay.text = "0";
+				txtPrice.text = "0.00";
+				
+				numItems.text = "0";
+				dg.dataProvider = null;
+				
+				dfDate.selectedDate = new Date(); 
+			}
+			
+			protected function btnAdd_keyUpHandler(event:KeyboardEvent):void
+			{
+				if(event.keyCode == Keyboard.ENTER)
+					(event.target as UIComponent).dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+			}
+			
+			
+			protected function dg_gridDoubleClickHandler(event:GridEvent):void
+			{
+				if (event.column.columnIndex == 2){
+					event.grid.dataGrid.startItemEditorSession(event.rowIndex, event.columnIndex);
+				}
+			}
+			private var prevQty:int = 1;
+			protected function dg_gridItemEditorSessionStartHandler(event:GridItemEditorEvent):void
+			{
+				var item:Object = event.column.grid.dataGrid.selectedItem;
+				prevQty = item.qty;
+			}
+			
+			protected function dg_gridItemEditorSessionSave(event:GridItemEditorEvent):void
+			{
+				var item:Object = event.column.grid.dataGrid.selectedItem;
+				if (item.qty <= 0){
+					item.qty = prevQty;
+					dg.dataProvider.itemUpdated(item);
+					event.preventDefault();
+					return;
+				}
+				/*var prodItem:Object;
+				var hasErr:Boolean = false;
+				
+				for each (prodItem in cmbProd.dataProvider as ArrayCollection){
+					if (prodItem.prodID == item.prodDBID){
+						var maxStock:int = int(prodItem.stockCnt)+prevQty;
+						//trace(item.qty," > ",maxStock, " prevQty: ",prevQty, "stock:",prodItem.stockCnt);
+						if (item.qty > maxStock){
+							item.qty = prevQty;
+							dg.dataProvider.itemUpdated(item);
+							event.preventDefault();
+							hasErr = true;
+							break;
+						}else
+							prodItem.stockCnt += prevQty - item.qty;
+							(cmbProd.dataProvider as ArrayCollection).itemUpdated(prodItem);
+							(cmbProd.dataProvider as ArrayCollection).refresh();
+							txtQty.value = 0;
+							txtPrice.text = txtSub.text = "0.00";
+						break;
+					}
+				}
+				
+				if (hasErr){
+					Alert.show("Value is greater than Available Stock.\n Max Stock:"+maxStock,"Error");
+					return;
+				}*/
+				
+				item.total = Number(item.qty * item.price);
+				dg.dataProvider.itemUpdated(item);
+				
+				_totalQty = 0;				
+				var subTot:Number = 0;
+				for each (var items:Object in dg.dataProvider){
+					subTot += Number(items.total)
+					_totalQty += Number(items.qty);
+				}
+				numItems.text = String(_totalQty);
+				updateTotal();
+			}
+			
+			private function updateTotal(editVat:Boolean =true):void{
+				/*if (txtVat.text.indexOf(".")==-1)
+					txtVat.text +=".00";
+				
+				txtSubtot.text = numFmttr.format(Number(txtSub.text.replace(/\b,\b/g,""))+Number(txtSubtot.text.replace(/\b,\b/g,"")));
+				if(editVat)
+					txtVat.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))*0.12);
+				txtGT.text = numFmttr.format(Number(txtSubtot.text.replace(/\b,\b/g,""))+Number(txtVat.text.replace(/\b,\b/g,"")));
+				*/
+			}
+			
+			
+			/*protected function SearchClickHandler(event:MouseEvent):void
+			{
+				var condition:String = (isProcess)?"onProcess!=0":"";
+				if (!isProcess){
+					var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_REQUISITION,{searchstr:txtSearchStr.text,condition:"",qBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					btnCheckOut.visible = btnCheckOut.includeInLayout = false;
+					btnEdit.visible = btnEdit.includeInLayout = false;
+					mainCont.enabled = false;
+					clearFields(null);
+				}else{
+					var popPnl:PopupPanel = new PopupPanel();
+					popPnl.width = searchProd.width;
+					//popPnl.height = undefined;
+					popPnl.popView = 2;
+					popPnl.mainID = "0";
+					popPnl.mainComp = this;
+					PopUpManager.addPopUp(popPnl,searchProd,true);
+					PopUpManager.centerPopUp(popPnl);
+				}
+			}*/
+			
+			protected function btnNewclickHandler(event:MouseEvent):void
+			{
+				
+				if (dg.dataProvider != null){
+					Alert.show("Are you sure to create a new Memo?","Memo not empty",Alert.YES|Alert.NO,null,newSalesHandler,null,Alert.NO);
+				}else{
+					_type = 0;
+					mainCont.enabled = true;
+					btnCheckOut.label = "Submit "+_memoType+" Memo";
+					btnCheckOut.visible = btnCheckOut.includeInLayout = true;
+					btnEdit.visible = btnEdit.includeInLayout = false;
+					statChange.visible = statChange.includeInLayout = false;
+					cbCancel.selected = false;
+					cbCancel_changeHandler(null);
+					clearFields(null);
+					/*for (var i:int =0; i < dgSearch.numElements; i++){
+						(dgSearch.getElementAt(i) as PurchaseReqRenderer).isSelected = false;
+					}*/
+					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_NUMBER,{qBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+				}
+			}
+			
+			private function newSalesHandler(event:CloseEvent):void{
+				if (event.detail == Alert.YES){
+					_type = 0;
+					mainCont.enabled = true;
+					btnCheckOut.label = "Submit "+_memoType+" Memo";
+					btnCheckOut.visible = btnCheckOut.includeInLayout = true;
+					btnEdit.visible = btnEdit.includeInLayout = false;
+					statChange.visible = statChange.includeInLayout = false;
+					cbCancel.selected = false;
+					cbCancel_changeHandler(null);
+					clearFields(null);
+					/*for (var i:int =0; i < dgSearch.numElements; i++){
+						(dgSearch.getElementAt(i) as PurchaseReqRenderer).isSelected = false;
+					}*/
+					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_NUMBER,{qBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
+				}
+			}
+
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				_type = 1;
+				btnCheckOut.label = "Save "+_memoType+" Memo Changes";
+				btnCheckOut.visible = btnCheckOut.includeInLayout = true;
+				mainCont.enabled = true;
+			}
+			
+			protected function cmbBranchchangeHandler(event:Event):void
+			{
+				genReqNoCode(); 
+			}
+			
+			private function formatAmtTotal(item:Object, column:GridColumn):String{
+				return numFmttr.format(item.total);
+			}
+			private function formatAmtPrice(item:Object, column:GridColumn):String{
+				return numFmttr.format(item.price);
+			}
+			
+			protected function pricelist_clickHandler(event:MouseEvent):void
+			{
+				if (cmbProd.selectedItem){
+					var prodPricePnl:ProductPricePanel = new ProductPricePanel();
+					prodPricePnl.txtPrice = txtPrice;
+					prodPricePnl.prodID = cmbProd.selectedItem.prodID;
+					PopUpManager.addPopUp(prodPricePnl,this,true);
+					PopUpManager.centerPopUp(prodPricePnl);
+				}
+			}
+			
+			
+			public function cbCancel_changeHandler(event:Event):void
+			{
+				btnCheckOut.enabled = !cbCancel.selected
+			}
+			
+			protected function updateCancel_clickHandler(event:MouseEvent):void
+			{
+				_data.purReqID;
+				var obj:Object = new Object();
+				obj.purReqID = _data.purReqID;
+				obj.stat = _data.prStatus = cbCancel.selected?3:0;
+				obj.pBox = this;
+				_fromUpdate = true;
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.CHANGE_REQUISITION_STATUS,obj)
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+			}
+			
+			protected function advSearch_clickHandler(event:MouseEvent):void
+			{
+				var popPnl:PopupPanel = new PopupPanel();
+				popPnl.width = searchProd.width;
+				//popPnl.height = undefined;
+				popPnl.popView = 2;
+				popPnl.mainID = "0";
+				popPnl.mainComp = this;
+				PopUpManager.addPopUp(popPnl,searchProd,true);
+				PopUpManager.centerPopUp(popPnl);
+			}
+			
+			public function viewOnly(value:Boolean):void{
+				prodBox.visible = prodBox.includeInLayout = value;
+				dg.editable = value;
+				dg.doubleClickEnabled = value;
+				
+				txtPrepBy.editable = value;
+				txtAppBy.editable = value;
+				dfDate.editable = dfDate.enabled = value;
+				gcRemove.visible = value;
+				cmbBranchDesti.enabled = value;
+				cmbBranchOrig.enabled = value;
+			}
+			
+			public function updateRenderer(stat:int):void{
+				_data.stat = stat;
+				if (theOwner){
+					(theOwner as PurchaseReqRenderer).data = _data;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<mx:NumberFormatter id="numFmttr" precision="2" useThousandsSeparator="true"  />
+	</fx:Declarations>
+	<s:VGroup id="searchProd" width="25%" height="100%" minWidth="300" maxWidth="350" paddingBottom="5" paddingTop="5">
+		<s:BorderContainer width="100%" height="100%" cornerRadius="10" borderStyle="inset">
+			<s:layout>
+				<s:VerticalLayout paddingTop="5" paddingLeft="2" paddingRight="2" paddingBottom="5"/>
+			</s:layout>
+			<s:borderStroke> 
+				<mx:SolidColorStroke 
+					color="{AccessVars.instance().borderStrokeColor}" 
+					weight="2"/> 
+			</s:borderStroke> 
+			<s:HGroup id="hgNewReq" width="100%" horizontalAlign="left" verticalAlign="middle" height="30" paddingRight="5" paddingLeft="3">
+				<s:TextInput prompt="[Memo No/Origin Branch]" id="txtSearchStr" enter="SearchClickHandler(null)" width="90%"/>
+				<mx:Button width="28" height="28" click="SearchClickHandler(event)" buttonMode="true" styleName="btnSearch" toolTip="Search"/>
+				<s:Button label="Adv. Search" buttonMode="true" click="advSearch_clickHandler(event)"/>
+			</s:HGroup>
+			<s:HGroup id="hgProcessReq" width="100%" horizontalAlign="center" verticalAlign="middle" height="30" paddingRight="5" visible="false" includeInLayout="false">
+				<s:Button label="Select Search Criteria " click="SearchClickHandler(event)" buttonMode="true" width="90%"/>				
+			</s:HGroup>
+			<s:HGroup id="mainHeader" width="100%" fontSize="14" horizontalAlign="center" fontWeight="bold" gap="2">
+				<s:Label text="Memo No." width="45%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}" verticalAlign="middle"/>
+				<s:Label text="Origin Branch" width="55%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}" verticalAlign="middle"/>
+			</s:HGroup>
+			<s:HGroup id="processHeader" width="100%" fontSize="14" horizontalAlign="center" fontWeight="bold" gap="0" visible="false" includeInLayout="false">
+				<s:HGroup width="72%" gap="0" horizontalAlign="center">
+					<s:Label text="PR No." width="35%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}" verticalAlign="middle"/>
+					<s:Label text="Requesting Branch" width="65%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5"  color="{AccessVars.instance().headerFontColor}" verticalAlign="middle"/>
+				</s:HGroup>
+				<s:Label text="Status" width="28%" backgroundColor="{AccessVars.instance().headerBgColor}" textAlign="center" paddingTop="5" paddingBottom="5" color="{AccessVars.instance().headerFontColor}"/>
+			</s:HGroup>
+			<s:Group width="100%" height="100%">
+				<s:Scroller width="100%" height="100%">
+					<s:VGroup id="dgSearch" gap="2" width="100%" height="100%" contentBackgroundAlpha="1" contentBackgroundColor="0x8bc76d" clipAndEnableScrolling="true"/>
+				</s:Scroller>
+			</s:Group>
+			<!--<mx:HRule width="100%"/>
+			<s:HGroup width="100%" horizontalAlign="left" paddingLeft="10" paddingBottom="5">
+			<s:Label text="Total Request: "/>
+			<s:Label id="totCount" text="0" width="50" textAlign="right" paddingRight="10"/>
+			</s:HGroup>-->
+		</s:BorderContainer>
+	</s:VGroup>
+	<s:VGroup id="cont" minHeight="550" width="75%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+		<s:VGroup id="mainCont" width="100%" height="100%" enabled="false">
+			<s:BorderContainer width="100%" cornerRadius="10" borderStyle="inset">
+				<s:borderStroke> 
+					<mx:SolidColorStroke 
+						color="{AccessVars.instance().borderStrokeColor}" 
+						weight="2"/> 
+				</s:borderStroke> 
+				<s:HGroup  width="100%" height="100%" fontSize="16">
+					<s:VGroup width="50%" height="100%" paddingBottom="5" paddingTop="20" paddingLeft="15" paddingRight="15">
+						<s:HGroup  width="100%" verticalAlign="middle">
+							<s:Label text="Origin" width="90" textAlign="right"/>
+							<s:DropDownList id="cmbBranchOrig" width="100%" prompt="[Origin Branch]" change="cmbBranchchangeHandler(event)"/>
+						</s:HGroup>
+						<s:HGroup id="statChange" width="100%" verticalAlign="middle" visible="false" includeInLayout="false" horizontalAlign="right">
+							<s:CheckBox label="InActive" id="cbCancel" selected="false" change="cbCancel_changeHandler(event)"/>
+							<s:Button label="Confirm" click="updateCancel_clickHandler(event)"/>
+						</s:HGroup>
+						<s:HGroup  width="100%" verticalAlign="middle">
+							<s:Label text="Destination" width="90" textAlign="right"/>
+							<s:DropDownList id="cmbBranchDesti" width="100%" prompt="[Destination Branch]" change="cmbBranchchangeHandler(event)"/>
+						</s:HGroup>
+						
+					</s:VGroup>
+					
+					<s:VGroup  width="50%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5">
+						<s:HGroup width="100%" verticalAlign="middle">
+							<s:Label text="Memo No." width="90" textAlign="right"/>
+							<s:TextInput id="txtReqNo" width="100%" editable="false"/>
+							<s:Label text="Date" textAlign="center"/>
+							<mx:DateField id="dfDate" width="150" showToday="true" change="cmbBranchchangeHandler(event)" selectedDate="{new Date()}"/>
+						</s:HGroup>
+						<s:VGroup id="prodBox" width="100%" height="100%" >
+							<s:HGroup width="100%" verticalAlign="middle">
+								<s:Label text="Item/Model No." width="90" textAlign="right"/>
+								<s:ComboBox id="cmbProd" width="100%" tabIndex="2" change="cmbProdchangeHandler(event)"/>
+							</s:HGroup>
+							<s:HGroup width="100%" verticalAlign="middle" visible="false" includeInLayout="false">
+								<s:Label text="Selling Price" width="90" textAlign="right"/>
+								<s:TextInput id="txtPrice" width="100" text="0.00" textAlign="right" selectable="false"/>
+								<s:Button label="View Historical Pricing" click="pricelist_clickHandler(event)"/>
+							</s:HGroup>
+							<s:HGroup width="100%" verticalAlign="middle">
+								<s:Label text="Quantity" width="90" textAlign="right"/>
+								<s:NumericStepper id="txtQty" width="100" value="0" textAlign="right" tabIndex="3" change="txtQtychangeHandler(event)"/>
+								<s:Spacer width="100%"/>
+								
+								<s:Button id="btnAdd" label="Add Product" tabIndex="4" click="btnAddclickHandler(event)" keyDown="btnAdd_keyUpHandler(event)"/>
+							</s:HGroup>
+						</s:VGroup>	
+						<s:HGroup id="statBox" width="100%" visible="false" includeInLayout="false">
+							<s:Label text="Status" width="90"/>
+							<s:Label id="reqStat" width="100%" textAlign="left" fontWeight="bold"/>
+						</s:HGroup>
+						
+						<!--<s:HGroup width="100%" horizontalAlign="right" verticalAlign="bottom">
+						<s:HGroup verticalAlign="middle" paddingLeft="10">
+						<s:Label text="Stock:" backgroundColor="0xFCFCFC" fontWeight="bold"/>
+						<mx:Text id="txtStock" text="0" textAlign="right" width="100" fontWeight="bold"/>
+						</s:HGroup>
+						<s:Spacer width="35%"/>
+						<s:HGroup width="50%" fontSize="16" verticalAlign="middle">
+						<s:Label text="Net Price:" width="90"/>
+						<mx:Text id="txtSub" width="100%" text="0.00" textAlign="right" />
+						</s:HGroup>
+						</s:HGroup>-->
+						
+						
+						
+					</s:VGroup>
+				</s:HGroup>
+			</s:BorderContainer>
+			<s:Spacer height="5"/>
+			<s:DataGrid id="dg" width="100%" height="100%" minHeight="200" sortableColumns="false" textAlign="center" fontSize="12" editable="true"
+						gridDoubleClick="dg_gridDoubleClickHandler(event)" doubleClickEnabled="true" gridItemEditorSessionSave="dg_gridItemEditorSessionSave(event)"
+						gridItemEditorSessionStart="dg_gridItemEditorSessionStartHandler(event)">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn id="gcRemove" width="20" itemRenderer="com.module.renderer.RemoveItemRenderer" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn width="45" dataField="num" headerText="No." editable="false"/>
+						<s:GridColumn dataField="qty" headerText="Qty" width="55"  editable="true" headerRenderer="com.module.renderer.GridHeadRenderer"/>
+						<s:GridColumn dataField="modelNo" headerText="Item / Model No." width="150"  editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						<s:GridColumn dataField="prodDesc" headerText="Description" editable="false" headerRenderer="com.module.renderer.GridHeadRenderer">
+							<s:itemRenderer>
+								<fx:Component>
+									<s:DefaultGridItemRenderer textAlign="left"/>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+						
+					</s:ArrayList>
+				</s:columns>
+			</s:DataGrid>
+			<s:HGroup width="100%" verticalAlign="top" fontSize="14">
+				<s:Label text="Special Instruction: "/>
+				<s:TextArea id="txtSInstruction" width="40%" height="100"/>
+				<s:VGroup width="60%">
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Prepared By" width="90" textAlign="right"/>
+						<s:TextInput id="txtPrepBy" width="100%" styleName="required" valueCommit="{txtPrepBy.styleName = txtPrepBy.text==''?'required':''}"/>
+					</s:HGroup>
+					
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Approved By" width="90" textAlign="right"/>
+						<s:TextInput id="txtAppBy" width="100%" styleName="required" valueCommit="{txtAppBy.styleName = txtAppBy.text==''?'required':''}"/>
+					</s:HGroup>
+					<s:HGroup width="100%" verticalAlign="middle">
+						<s:Label text="Number of Items: "/>
+						<s:Label id="numItems" text="0"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:HGroup>
+			<!--<s:HGroup width="100%" verticalAlign="bottom" fontSize="14">
+				<s:Label text="Number of Items: "/>
+				<s:Label id="numItems" text="0"/>
+				<s:Spacer width="100%"/>
+				<s:VGroup width="40%">
+					<s:HGroup width="100%">
+						<s:Label text="Subtotal" width="90"/>
+						<mx:Text id="txtSubtot" width="100%" text="0.00" textAlign="right"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="VAT" width="90"/>
+						<s:TextInput id="txtVat" width="100%" text="0.00" textAlign="right" borderVisible="false" restrict="0-9." focusOut="{updateTotal(false)}" keyUp="txtVat_keyUpHandler(event)"/>
+					</s:HGroup>
+					<s:HGroup width="100%">
+						<s:Label text="TOTAL" fontSize="16"/>
+						<s:Label id="txtGT" textAlign="right" text="0.00" fontSize="18" width="100%"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:HGroup>-->
+		</s:VGroup>		
+		<mx:HRule height="5" width="100%"/>
+		<s:HGroup id="hgControl" width="100%" height="100%" paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5"
+				  horizontalAlign="left" verticalAlign="top">						
+			<s:Button id="btnCheckOut" label="{'Submit '+_memoType+' Memo'}" click="CheckOutclickHandler(event)" visible="false" includeInLayout="false"/>
+			<s:Spacer width="100%"/>
+			<s:Button id="btnNew"  label="{'New '+_memoType+' Memo'}" click="btnNewclickHandler(event)"/>
+			<s:Button id="btnEdit"  label="{'Edit '+_memoType+' Memo'}" click="editClickHandler(event)" visible="false" includeInLayout="false"/>
+			<!--<s:Button id="btnView"  label="View Memo" click="printPrevPO()" visible="false" includeInLayout="false"/>-->
+		</s:HGroup>
+		
+	</s:VGroup>
+</s:HGroup>

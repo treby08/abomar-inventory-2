@@ -9,6 +9,7 @@
 		<![CDATA[
 			import com.flexlib.controls.tabBarClasses.SuperTab;
 			import com.module.views.BranchBox;
+			import com.module.views.CreditDebitMemo;
 			import com.module.views.CustomerBox;
 			import com.module.views.CustomerListBox;
 			import com.module.views.InventoryBox;
@@ -215,6 +216,17 @@
 					case 7:
 						objBox = new InventoryBox();
 						_cnv.label = "Stocks";
+					break;
+					case 7:
+						objBox = new CreditDebitMemo();
+						if (code=="cr_memo"){
+							CreditDebitMemo(objBox).memoType = "Credit";
+							_cnv.label = "Credit Memo";
+						}else{
+							CreditDebitMemo(objBox).memoType = "Debit";
+							_cnv.label = "Debit Memo";
+						}
+						
 					break;
 					default:
 						return;
