@@ -1268,6 +1268,125 @@ package com.module.business
 			}
 		}
 		
+		public function memo_AED(params:Object):void{
+			_params = params;
+			if(params.sBox)
+				params.sBox = null;
+			trace("memo_AED",_params.type);
+			var service:HTTPService =  AccessVars.instance().mainApp.httpService.getHTTPService(Services.MEMO_SERVICE);
+			var token:AsyncToken = service.send(params);
+			var responder:mx.rpc.Responder = new mx.rpc.Responder(memoAED_onResult, Main_onFault);
+			token.addResponder(responder);
+		}
+		
+		private function memoAED_onResult(evt:ResultEvent):void{
+			var strResult:String = String(evt.result);
+			trace("memoAED_onResult",strResult);
+			if(_params == null)
+				return;
+			var str:String;
+			var str2:String = "Memo";
+			switch(_params.type){
+				case "add":
+					str="Adding";
+					break;
+				case "edit":
+					str="Updating";
+					break;
+				case "delete":
+					str="Deleting";
+					break;
+				case "change_stat":
+					str="Status Changed";
+					break;
+			}
+			
+			if (strResult != "" && str != null){
+				Alert.show(str+" Memo Error: "+strResult,"Error");
+				return;
+			}
+			var listXML:XML = XML(evt.result);
+			var arrCol:ArrayCollection = new ArrayCollection()
+			var arrObj:Object = {}
+			var obj:XML;
+			if (str){
+				str+=_params.type!="change_stat"?" Memo Complete":"";
+				Alert.show(str, str2,4,null,function():void{
+					if (_params.type == "change_stat" && _params.pBox){
+						_params.pBox.updateRenderer(_params.stat);
+					}else if (_params.pBox){
+						_params.pBox.clearFields(null);
+						_params.pBox = null;
+					}else if (_params.ppnl){
+						_params.ppnl.parent.removeElement(_params.ppnl);
+						_params.ppnl = null;
+					}
+					_params = null;
+				});
+			}else if (_params.type=="get_details"){
+				listXML = XML(evt.result);
+				arrCol = new ArrayCollection();
+				var num:int = 1;
+				//trace("get_details",XML(evt.result).toXMLString())
+				for each (obj in listXML.children()){
+					arrObj = new Object();
+					//prdID,prd_purReqID,prd_prodID,quantity,totalPurchase,prodModel,prodCode,prodSubNum,prodComModUse,srPrice					
+					arrObj.prdID = obj.@prdID;
+					arrObj.prd_purReqID = obj.@prd_purReqID;
+					arrObj.prd_prodID = obj.@prd_prodID;
+					arrObj.qty = obj.@quantity;
+					arrObj.total = Number(obj.@quantity)*Number(obj.@srPrice);//obj.@totalPurchase;
+					arrObj.prodID = obj.@prodCode;
+					arrObj.modelNo = obj.@prodModel;
+					arrObj.prodCode = obj.@prodCode;
+					arrObj.prodSubNum = obj.@prodSubNum;
+					arrObj.prodDesc = obj.@desc;
+					arrObj.oWeight = obj.@weight;
+					arrObj.weight = Number(obj.@weight)*Number(obj.@quantity);
+					arrObj.prodComModUse = obj.@prodComModUse;
+					arrObj.price = obj.@srPrice;
+					arrObj.num = num;
+					arrObj.isSelected = "1";
+					arrCol.addItem(arrObj);
+					num++;
+				}
+				if (_params.qBox){
+					_params.itemRen.isDispatch = false;
+					_params.qBox.setDataProvider(arrCol,3);
+					_params.qBox = null;
+					_params = null;
+				}
+			}else{
+				
+				listXML = XML(evt.result);
+				arrCol = new ArrayCollection();
+				//arrObj = {};
+				for each (obj in listXML.children()){
+					arrObj = new Object();
+					/*<item purReqID=\"".$row['purReqID']."\" reqNo=\"REQ - ".number_pad($row['purReqID'])."\" preparedBy=\"".$row['preparedBy'].
+					"\" bCode=\"".$row['bCode']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans'].
+					"\" totalAmt=\"".$row['totalAmt']."\"/>*/
+					arrObj.purReqID = obj.@purReqID;
+					arrObj.reqNo = obj.@reqNo;
+					arrObj.bCode = obj.@bCode;					
+					arrObj.bLocation = obj.@bLocation;					
+					arrObj.branchID = obj.@branchID;
+					arrObj.preparedBy = obj.@preparedBy;
+					arrObj.approvedBy = obj.@approvedBy;
+					arrObj.dateTrans = obj.@dateTrans;
+					arrObj.totalAmt = obj.@totalAmt;
+					arrObj.prStatus = obj.@prStatus;
+					arrObj.onProcess = obj.@onProcess;
+					arrCol.addItem(arrObj);
+				}
+				if (_params.qBox){					
+					_params.qBox.dataCollection = arrCol;
+					_params.qBox = null;
+					_params = null;
+				}
+			}
+		}
+		
 		private function Main_onFault(evt:FaultEvent):void{
 			Alert.show("Query Fault:"+evt.message);
 		}

@@ -21,6 +21,7 @@
 		    public static var  PURCHASE_ORD_SERVICE:String = "purchase_ord_service";
 		    public static var  WAREHOUSE_RECEIPT_SERVICE:String = "warehouse_receipt_service";
 		    public static var  WAREHOUSE_DISCREPANCY_SERVICE:String = "warehouse_discrepancy_service";
+		    public static var  MEMO_SERVICE:String = "memo_service";
 					    
 			public function getHTTPService( name : String ) : HTTPService
 		    {
@@ -92,6 +93,10 @@
 		showBusyCursor="true" />
 	<mx:HTTPService id="warehouse_discrepancy_service"
 		url="{SecurityType.HTTP_HOST+'/whDiscrepancyAED.php'}"
+		resultFormat="e4x"
+		showBusyCursor="true" />
+	<mx:HTTPService id="memo_service"
+		url="{SecurityType.HTTP_HOST+'/memoAED.php'}"
 		resultFormat="e4x"
 		showBusyCursor="true" />
 						

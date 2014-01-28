@@ -66,6 +66,14 @@ package com.module.events
 		public static var SEARCH_PAYMENT:String = "search_payment";
 		public static var GET_PAYMENT_DETAILS:String = "get_payment_details";
 		
+		public static var ADD_MEMO:String = "add_memo";
+		public static var EDIT_MEMO:String = "edit_memo";
+		public static var DELETE_MEMO:String = "delete_memo";
+		public static var SEARCH_MEMO:String = "search_memo";
+		public static var GET_MEMO_DETAILS:String = "get_memo_details";
+		public static var GET_MEMO_NUMBER:String = "get_memo_number";
+		public static var CHANGE_MEMO_STATUS:String = "change_memo_status";
+		
 		public var params:Object;
 		
 		public function ItemsTransEvent(type:String, _params:Object = null,bubbles:Boolean=false, cancelable:Boolean=false)
