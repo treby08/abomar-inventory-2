@@ -81,7 +81,7 @@
 			{
 				dfDate.selectedDate = new Date();
 				if (!isProcess){
-					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_NUMBER,{qBox:this})
+					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_MEMO_NUMBER,{qBox:this})
 					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
 					
 				}else{
@@ -642,6 +642,12 @@
 				if (theOwner){
 					(theOwner as PurchaseReqRenderer).data = _data;
 				}
+			}
+			
+			protected function SearchClickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
 			}
 			
 		]]>

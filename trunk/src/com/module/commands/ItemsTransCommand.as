@@ -245,6 +245,37 @@ package com.module.commands
 					obj.type = "get_details";
 					ItemsTransDelegate.instance().payment_AED(obj);
 					break;
+				
+				/*CREDIT/DEBIT MEMO*/
+				case ItemsTransEvent.ADD_MEMO:
+					obj.type = "add";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
+				case ItemsTransEvent.EDIT_MEMO:
+					obj.type = "edit";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
+				case ItemsTransEvent.DELETE_MEMO:
+					obj.type = "delete";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
+				
+				case ItemsTransEvent.SEARCH_MEMO:
+					obj.type = "search";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
+				case ItemsTransEvent.GET_MEMO_DETAILS:
+					obj.type = "get_details";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
+				case ItemsTransEvent.GET_MEMO_NUMBER:
+					obj.type = "get_memo_no";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
+				case ItemsTransEvent.CHANGE_MEMO_STATUS:
+					obj.type = "change_stat";
+					ItemsTransDelegate.instance().memo_AED(obj);
+					break;
 			}
 		}
 	}
