@@ -107,6 +107,14 @@ package com.module.control
 			addCommand( ItemsTransEvent.DELETE_PAYMENT, ItemsTransCommand );
 			addCommand( ItemsTransEvent.SEARCH_PAYMENT, ItemsTransCommand );
 			addCommand( ItemsTransEvent.GET_PAYMENT_DETAILS, ItemsTransCommand );
+			
+			addCommand( ItemsTransEvent.ADD_MEMO, ItemsTransCommand );
+			addCommand( ItemsTransEvent.EDIT_MEMO, ItemsTransCommand );
+			addCommand( ItemsTransEvent.DELETE_MEMO, ItemsTransCommand );
+			addCommand( ItemsTransEvent.SEARCH_MEMO, ItemsTransCommand );
+			addCommand( ItemsTransEvent.GET_MEMO_DETAILS, ItemsTransCommand );
+			addCommand( ItemsTransEvent.GET_MEMO_NUMBER, ItemsTransCommand );
+			addCommand( ItemsTransEvent.CHANGE_MEMO_STATUS, ItemsTransCommand );
 		}
 	}
 }

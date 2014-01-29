@@ -270,7 +270,7 @@ package com.module.commands
 					break;
 				case ItemsTransEvent.GET_MEMO_NUMBER:
 					obj.type = "get_memo_no";
-					ItemsTransDelegate.instance().memo_AED(obj);
+					ItemsTransDelegate.instance().memo_memoNo(obj);
 					break;
 				case ItemsTransEvent.CHANGE_MEMO_STATUS:
 					obj.type = "change_stat";
