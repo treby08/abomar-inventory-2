@@ -33,17 +33,17 @@
 			public var _data:Object;
 			private var _fromUpdate:Boolean = false;
 			public var theOwner:Object;
-			public var _reqNo:String = "000";
+			public var _memoNo:String = "000";
 			[Bindable]
 			public var _memoType:String = "Credit";
 			public var isProcess:Boolean = false;
 			//private var _prodID:String;
 			
-			public function set reqNo(val:String):void{
-				_reqNo = val;
+			public function set memoNo(val:String):void{
+				_memoNo = val;
 			}
-			public function get reqNo():String{
-				return _reqNo;
+			public function get memoNo():String{
+				return _memoNo;
 			}
 			public function set memoType(val:String):void{
 				_memoType = val;
@@ -107,6 +107,7 @@
 					var yr:String = String(dfDate.selectedDate.getFullYear());
 					txtReqNo.text = cmbBranch.selectedItem.bCode+"-"+yr.substr(2)+"-"+_reqNo;
 				}*/
+				txtReqNo.text = _memoNo;
 			}
 			
 			public function setDataProvider(arr:ArrayCollection,type:int):void{
@@ -323,28 +324,28 @@
 				$totalAmt = $_REQUEST['totalAmt']; 
 				*/
 				var obj:Object = {}
-				obj.memoOrig_branchID = cmbBranchOrig.selectedItem.branchID;
-				obj.memoDesti_branchID = cmbBranchDesti.selectedItem.branchID;
+				obj.branchOID = cmbBranchOrig.selectedItem.branchID;
+				obj.branchDID = cmbBranchDesti.selectedItem.branchID;
 				obj.preparedBy = txtPrepBy.text;
 				obj.approvedBy = txtAppBy.text;
 				obj.dateTrans = setDateFormat(dfDate.selectedDate);
-				//obj.totalAmt = txtGT.text.replace(/\b,\b/g,"");
-				//obj.vat = txtVat.text.replace(/\b,\b/g,"");
+				obj.spInstruct = txtSInstruction.text;
+				
 				var strItem:Array = new Array();
 				for each (var item:Object in dg.dataProvider){
 					strItem.push(item.prodDBID+"|"+item.qty+"|"+item.prdID);
 				}
-				obj.memoDetails = strItem.join("||");
-				trace("obj.memoDetails:",obj.memoDetails)
+				obj.stockDetails = strItem.join("||");
+				trace("obj.memoDetails:",obj.stockDetails)
 				var log2:ItemsTransEvent;
 				if (_type==0){
-					log2 = new ItemsTransEvent(ItemsTransEvent.ADD_REQUISITION,obj)
+					log2 = new ItemsTransEvent(ItemsTransEvent.ADD_MEMO,obj)
 					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
 				}else if (_type==1){
 					obj.memoID = _data.memoID;
 					obj.pBox = this;
 					_fromUpdate = true;
-					log2 = new ItemsTransEvent(ItemsTransEvent.EDIT_REQUISITION,obj)
+					log2 = new ItemsTransEvent(ItemsTransEvent.EDIT_MEMO,obj)
 					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
 				}
 				
@@ -539,7 +540,7 @@
 					/*for (var i:int =0; i < dgSearch.numElements; i++){
 						(dgSearch.getElementAt(i) as PurchaseReqRenderer).isSelected = false;
 					}*/
-					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_NUMBER,{qBox:this})
+					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_MEMO_NUMBER,{qBox:this})
 					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
 				}
 			}
@@ -558,7 +559,7 @@
 					/*for (var i:int =0; i < dgSearch.numElements; i++){
 						(dgSearch.getElementAt(i) as PurchaseReqRenderer).isSelected = false;
 					}*/
-					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_REQUISITION_NUMBER,{qBox:this})
+					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_MEMO_NUMBER,{qBox:this})
 					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
 				}
 			}
@@ -608,7 +609,7 @@
 				obj.stat = _data.prStatus = cbCancel.selected?3:0;
 				obj.pBox = this;
 				_fromUpdate = true;
-				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.CHANGE_REQUISITION_STATUS,obj)
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.CHANGE_MEMO_STATUS,obj)
 				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
 			}
 			

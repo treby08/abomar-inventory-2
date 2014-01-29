@@ -1387,6 +1387,28 @@ package com.module.business
 			}
 		}
 		
+		public function memo_memoNo(params:Object):void{
+			_paramsUniqueID = params;
+			if(params.sBox)
+				params.sBox = null;
+			trace("memo_memoNo",params.type);
+			var service:HTTPService =  AccessVars.instance().mainApp.httpService.getHTTPService(Services.MEMO_SERVICE);
+			var token:AsyncToken = service.send(params);
+			var responder:mx.rpc.Responder = new mx.rpc.Responder(memo_memoNo_onResult, Main_onFault);
+			token.addResponder(responder);
+		}
+		private function memo_memoNo_onResult(evt:ResultEvent):void{
+			var strResult:String = String(evt.result);
+			trace("memo_memoNo_onResult",strResult);
+			if (_paramsUniqueID.qBox){
+				_paramsUniqueID.qBox.memoNo = String(evt.result);
+				_paramsUniqueID.qBox.genReqNoCode();
+				_paramsUniqueID.qBox = null;
+				_paramsUniqueID = null;
+				
+			}
+		}
+		
 		private function Main_onFault(evt:FaultEvent):void{
 			Alert.show("Query Fault:"+evt.message);
 		}
