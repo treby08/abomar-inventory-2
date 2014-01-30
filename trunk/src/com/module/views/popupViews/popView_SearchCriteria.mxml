@@ -122,6 +122,16 @@
 						}else
 							updateDataList();
 					break;
+					case 7:
+						MemoGrp.visible = MemoGrp.includeInLayout = true;
+						sDate_Memo.selectedDate = new Date();
+						eDate_Memo.selectedDate = new Date();
+						if (AccessVars.instance().branches == null){
+							log2 = new DataListEvent(DataListEvent.GET_BRANCH_LIST2,{pBox:this})
+							CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+						}else
+							updateDataList();
+						break;
 				}
 			}
 			
@@ -182,6 +192,14 @@
 						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_SALES,{searchstr:"null",condition:condition,sBox:mainComp,onProcess:""})
 						CairngormEventDispatcher.getInstance().dispatchEvent(log);
 					break;
+					case 7:
+						var condMemoID:String = (memoNo.text == "")?"":"stockTID = "+String(int(memoNo.text))+" OR";
+						//onProcess = cmbIStatus.selectedItem.type==-1?")":"AND stStatus="+cmbIStatus.selectedItem.type+")";
+						condExp = " branchOID ="+cmbBranch_Memo.selectedItem.branchID+" OR (dateTrans >='"+setDateFormat(sDate_Memo.selectedDate)+"' AND dateTrans <='"+setDateFormat(eDate_Memo.selectedDate)+"')";
+						condition = condMemoID+" "+condExp;
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_MEMO,{searchstr:"null",condition:condition,sBox:mainComp,onProcess:""})
+						CairngormEventDispatcher.getInstance().dispatchEvent(log);
+						break;
 				}
 				trace("condition",condition);
 				popPanel.cancelClickHandler(null);
@@ -204,6 +222,9 @@
 					}else if (_sType == 3){
 						cmbBranch_wd.dataProvider = AccessVars.instance().branches;			
 						cmbBranch_wd.selectedIndex = 0;
+					}else if (_sType == 7){
+						cmbBranch_Memo.dataProvider = AccessVars.instance().branches;			
+						cmbBranch_Memo.selectedIndex = 0;
 					}
 				}
 				if(AccessVars.instance().supplier){
@@ -365,6 +386,24 @@
 		<s:HGroup width="100%" verticalAlign="middle">
 			<s:Label text="End Date" width="100" textAlign="right"/>
 			<mx:DateField id="eiDate" width="100%" showToday="true"/>
+		</s:HGroup>
+	</s:VGroup>
+	<s:VGroup id="MemoGrp" width="100%" visible="false" includeInLayout="false">
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Memo No." width="100" textAlign="right"/>
+			<s:TextInput id="memoNo" width="100%" restrict="0-9"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Branch" width="100" textAlign="right"/>
+			<s:DropDownList id="cmbBranch_Memo" width="100%" labelField="label"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="Start Date" width="100" textAlign="right"/>
+			<mx:DateField id="sDate_Memo" width="100%" showToday="true"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Label text="End Date" width="100" textAlign="right"/>
+			<mx:DateField id="eDate_Memo" width="100%" showToday="true"/>
 		</s:HGroup>
 	</s:VGroup>
 	<mx:HRule width="90%"/>

@@ -8,6 +8,7 @@
 			import com.module.events.DataListEvent;
 			import com.module.events.ItemsTransEvent;
 			import com.module.events.UserEvent;
+			import com.module.renderer.MemoRenderer;
 			import com.module.renderer.PurchaseReqListRenderer;
 			import com.module.renderer.PurchaseReqRenderer;
 			import com.module.views.panels.PopupPanel;
@@ -147,29 +148,29 @@
 			public function set dataCollection(arrCol:ArrayCollection):void{
 				_arrCol = arrCol
 				
-				/*if (dgSearch.numElements > 0){
+				if (dgSearch.numElements > 0){
 					dgSearch.removeAllElements();
 				}
 				if (arrCol.length > 0){
 					var obj:Object;
 					if (isProcess){
-						var itemRend:PurchaseReqListRenderer;
+						/*var itemRend:PurchaseReqListRenderer;
 						for each (obj in arrCol){
 							itemRend = new PurchaseReqListRenderer()
 							itemRend.data = obj;
 							itemRend.theBox = this
 							dgSearch.addElement(itemRend);
-						}
+						}*/
 					}else{
-						var itemUser:PurchaseReqRenderer;
+						var itemUser:MemoRenderer;
 						for each (obj in arrCol){
-							itemUser = new PurchaseReqRenderer()
+							itemUser = new MemoRenderer()
 							itemUser.data = obj;
 							itemUser.theBox = this
 							dgSearch.addElement(itemUser);
 						}
 					}
-				}*/
+				}
 			}
 			
 			public function setSelectedBranch(bID:String):void{
@@ -613,18 +614,6 @@
 				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
 			}
 			
-			protected function advSearch_clickHandler(event:MouseEvent):void
-			{
-				var popPnl:PopupPanel = new PopupPanel();
-				popPnl.width = searchProd.width;
-				//popPnl.height = undefined;
-				popPnl.popView = 2;
-				popPnl.mainID = "0";
-				popPnl.mainComp = this;
-				PopUpManager.addPopUp(popPnl,searchProd,true);
-				PopUpManager.centerPopUp(popPnl);
-			}
-			
 			public function viewOnly(value:Boolean):void{
 				prodBox.visible = prodBox.includeInLayout = value;
 				dg.editable = value;
@@ -647,8 +636,36 @@
 			
 			protected function SearchClickHandler(event:MouseEvent):void
 			{
-				// TODO Auto-generated method stub
-				
+				var condition:String = (isProcess)?"onProcess!=0":"";
+				if (!isProcess){
+					var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_MEMO,{searchstr:txtSearchStr.text,condition:"",qBox:this})
+					CairngormEventDispatcher.getInstance().dispatchEvent(log);
+					btnCheckOut.visible = btnCheckOut.includeInLayout = false;
+					btnEdit.visible = btnEdit.includeInLayout = false;
+					mainCont.enabled = false;
+					clearFields(null);
+				}else{
+					var popPnl:PopupPanel = new PopupPanel();
+					popPnl.width = searchProd.width;
+					//popPnl.height = undefined;
+					popPnl.popView = 2;
+					popPnl.mainID = "7";
+					popPnl.mainComp = this;
+					PopUpManager.addPopUp(popPnl,searchProd,true);
+					PopUpManager.centerPopUp(popPnl);
+				}
+			}
+			
+			protected function advSearch_clickHandler(event:MouseEvent):void
+			{
+				var popPnl:PopupPanel = new PopupPanel();
+				popPnl.width = searchProd.width;
+				//popPnl.height = undefined;
+				popPnl.popView = 2;
+				popPnl.mainID = "7";
+				popPnl.mainComp = this;
+				PopUpManager.addPopUp(popPnl,searchProd,true);
+				PopUpManager.centerPopUp(popPnl);
 			}
 			
 		]]>

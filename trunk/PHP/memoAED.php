@@ -63,15 +63,15 @@
 	}else if ($type == "delete"){
 		mysql_query("DELETE FROM stock_transfer WHERE stockTID = '$stockTID'",$conn);
 	}else if ($type == "search"){
-		$condition = ($condition == "")?"stdStatus=1":stripslashes($condition);
+		$condition = ($condition == "")?"stStatus=0":stripslashes($condition);
 		$sCont = ($searchSTR == "null")?"":"(bCode LIKE '%$searchSTR%' OR stockTID LIKE '%$searchSTR%') AND ";
-		
-		$query = mysql_query("SELECT pr.*, b.bCode, b.branchID, b.bLocation FROM stock_transfer pr
-							INNER JOIN branches b ON b.branchID=pr.purReq_branchID
-							WHERE ".$sCont." ".$condition,$conn) or die(mysql_error().' '.$sql.' '. __LINE__); 
+		$sql= "SELECT pr.*, b.bCode, b.branchID, b.bLocation FROM stock_transfer pr
+							INNER JOIN branches b ON b.branchID=pr.branchOID
+							WHERE ".$sCont." ".$condition;
+		$query = mysql_query($sql,$conn) or die(mysql_error().' '.$sql.' '. __LINE__); 
 		$xml = "<root>";
 			while($row = mysql_fetch_assoc($query)){
-				$xml .= "<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" preparedBy=\"".$row['preparedBy']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" branchID=\"".$row['branchID']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" totalAmt=\"".$row['totalAmt']."\" onProcess=\"".$row['onProcess']."\" prStatus=\"".$row['purReq_status']."\"/>";
+				$xml .= "<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" preparedBy=\"".$row['preparedBy']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" branchID=\"".$row['branchID']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" stStatus=\"".$row['stStatus']."\"/>";
 			}
 		$xml .= "</root>";
 		echo $xml;
