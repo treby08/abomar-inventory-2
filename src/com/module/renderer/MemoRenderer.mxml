@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" creationComplete="creationCompleteHandler(event)"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="100%">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value _dataects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.module.events.ItemsTransEvent;
+			import com.module.events.UserEvent;
+			import com.module.views.CreditMemoBox;
+			import com.module.views.UserPanel;
+			import com.variables.AccessVars;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var _data:Object;
+			private var _theBox:CreditMemoBox;
+			private var _isSelected:Boolean = false;
+			public var isDispatch:Boolean = false;
+			[Embed(source="assets/assets.swf", symbol="firefox_close_up")]
+			private static var DEFAULT_CLOSE_UP:Class;
+			
+			public function set data(value:Object):void{
+				_data = value
+			}
+			
+			public function set theBox(value:CreditMemoBox):void{
+				_theBox = value
+			}
+			
+			public function set isSelected(value:Boolean):void{
+				_isSelected = value
+				if (value)
+					sFill.color = AccessVars.instance().colBgColorOver
+				else
+					sFill.color=AccessVars.instance().colBgColor;
+			}
+			public function get isSelected():Boolean{
+				return _isSelected;
+			}
+			
+			public function creationCompleteHandler(event:FlexEvent):void
+			{
+				txtMemoNo.text = _data.memoNo;
+				txtBranch.text = _data.bCode +" - "+_data.bLocation;
+				
+			}
+			
+			protected function editClickHandler(event:MouseEvent):void
+			{
+				for (var i:int =0; i < _theBox.dgSearch.numElements; i++){
+					(_theBox.dgSearch.getElementAt(i) as MemoRenderer).isSelected = false;
+				}
+				isSelected = true;
+				
+				isDispatch = true;
+				_theBox.theOwner = this;
+				_theBox.clearFields(null);
+				/*<item purReqID=\"".$row['purReqID']."\" reqNo=\"REQ - ".number_pad($row['purReqID'])."\" preparedBy=\"".$row['preparedBy']."\" 
+				bCode=\"".$row['bCode']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" totalAmt=\"".$row['totalAmt']."\"
+				onProcess=\"".$row['onProcess']."\" prStatus=\"".$row['purReq_status']."\"/>*/
+				
+				var obj:Object = _theBox._data = _data;
+				_theBox.txtPrepBy.text = obj.prepBy;
+				_theBox.txtPrepBy.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_UP));
+				_theBox.txtAppBy.text = obj.appBy;
+				_theBox.txtAppBy.dispatchEvent(new KeyboardEvent(KeyboardEvent.KEY_UP));
+				_theBox.setSelectedBranch(String(obj.branchID));
+				_theBox.memoNo = String(obj.memoNo);
+				_theBox.genReqNoCode();
+				var arr:Array = String(_data.dateTrans).split("-");
+				_theBox.dfDate.selectedDate = new Date(arr[0],(arr[1]-1),arr[2]);
+				_theBox.cbCancel.selected = int(obj.prStatus)==3?true:false;
+				_theBox.btnCheckOut.enabled = !_theBox.cbCancel.selected
+				var condition:String = "";
+				/*if (_theBox.isProcess){
+					_theBox.statBox.visible = _theBox.statBox.includeInLayout = true;
+					_theBox.reqStat.text = AccessVars.statLabel(int(obj.prStatus)).toUpperCase();
+					condition = " ";
+				}*/
+				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_MEMO_DETAILS,{stockTID:obj.stockTID,qBox:_theBox,itemRen:this,condition:condition})
+				CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+				if (!_theBox.isProcess && int(obj.prStatus)!=1){
+					_theBox.btnCheckOut.visible = _theBox.btnCheckOut.includeInLayout = false;
+					_theBox.btnNew.visible = _theBox.btnNew.includeInLayout = true;
+					_theBox.mainCont.enabled = false;
+					_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = true;
+					_theBox.statChange.visible = _theBox.statChange.includeInLayout = true;
+				}else{
+					_theBox.mainCont.enabled = true;
+					if(int(obj.prStatus)==1){
+						_theBox.btnCheckOut.visible = _theBox.btnCheckOut.includeInLayout = false;
+						_theBox.btnNew.visible = _theBox.btnNew.includeInLayout = true;
+						_theBox.btnEdit.visible = _theBox.btnEdit.includeInLayout = false;
+						_theBox.statChange.visible = _theBox.statChange.includeInLayout = false;
+						_theBox.viewOnly(false);
+					}
+				}
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<s:Rect width="100%" height="100%">
+		<s:fill><s:SolidColor color="{AccessVars.instance().colBgColor}" alpha="0.5" id="sFill"/></s:fill>
+	</s:Rect>
+	<s:HGroup paddingBottom="3" paddingTop="3" width="100%" fontSize="14" verticalAlign="middle" 
+			  useHandCursor="true" buttonMode="true" click="editClickHandler(event)">
+		<s:Label id="txtMemoNo" width="45%" textAlign="center"/>
+		<s:Label id="txtBranch" width="55%" textAlign="center"/>
+	</s:HGroup>
+	
+</s:Group>

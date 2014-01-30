@@ -1330,12 +1330,18 @@ package com.module.business
 				//trace("get_details",XML(evt.result).toXMLString())
 				for each (obj in listXML.children()){
 					arrObj = new Object();
-					//prdID,prd_purReqID,prd_prodID,quantity,totalPurchase,prodModel,prodCode,prodSubNum,prodComModUse,srPrice					
-					arrObj.prdID = obj.@prdID;
-					arrObj.prd_purReqID = obj.@prd_purReqID;
-					arrObj.prd_prodID = obj.@prd_prodID;
+					/*
+					$xml .= "<item stockTDID=\"".$row['stockTDID']."\" stockTID=\"".$row['stockTID']."\" 
+					stProdID=\"".$row['stProdID']."\" prodModel=\"".$row['prodModel']."\" 
+					desc=\"".$row['prodDescrip']."\" quantity=\"".$qty."\" prodCode=\"".$row['prodCode']."\" 
+					prodSubNum=\"".$row['prodSubNum']."\" prodComModUse=\"".$row['prodComModUse']."\" 
+					weight=\"".$row['prodWeight']."\"/>";
+					*/
+					arrObj.stockTID = obj.@stockTID;
+					arrObj.stockTDID = obj.@stockTDID;
+					arrObj.stProdID = obj.@stProdID;
 					arrObj.qty = obj.@quantity;
-					arrObj.total = Number(obj.@quantity)*Number(obj.@srPrice);//obj.@totalPurchase;
+					//arrObj.total = Number(obj.@quantity)*Number(obj.@srPrice);//obj.@totalPurchase;
 					arrObj.prodID = obj.@prodCode;
 					arrObj.modelNo = obj.@prodModel;
 					arrObj.prodCode = obj.@prodCode;
@@ -1344,7 +1350,7 @@ package com.module.business
 					arrObj.oWeight = obj.@weight;
 					arrObj.weight = Number(obj.@weight)*Number(obj.@quantity);
 					arrObj.prodComModUse = obj.@prodComModUse;
-					arrObj.price = obj.@srPrice;
+					//arrObj.price = obj.@srPrice;
 					arrObj.num = num;
 					arrObj.isSelected = "1";
 					arrCol.addItem(arrObj);
@@ -1363,20 +1369,21 @@ package com.module.business
 				//arrObj = {};
 				for each (obj in listXML.children()){
 					arrObj = new Object();
-					/*<item purReqID=\"".$row['purReqID']."\" reqNo=\"REQ - ".number_pad($row['purReqID'])."\" preparedBy=\"".$row['preparedBy'].
-					"\" bCode=\"".$row['bCode']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans'].
-					"\" totalAmt=\"".$row['totalAmt']."\"/>*/
-					arrObj.purReqID = obj.@purReqID;
-					arrObj.reqNo = obj.@reqNo;
+					/*"<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" 
+					preparedBy=\"".$row['preparedBy']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" 
+					branchID=\"".$row['branchID']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" 
+					stStatus=\"".$row['stStatus']."\"/>";
+					*/
+					arrObj.stockTID = obj.@stockTID;
+					arrObj.memoNo = obj.@reqNo;
 					arrObj.bCode = obj.@bCode;					
 					arrObj.bLocation = obj.@bLocation;					
 					arrObj.branchID = obj.@branchID;
 					arrObj.preparedBy = obj.@preparedBy;
 					arrObj.approvedBy = obj.@approvedBy;
 					arrObj.dateTrans = obj.@dateTrans;
-					arrObj.totalAmt = obj.@totalAmt;
-					arrObj.prStatus = obj.@prStatus;
-					arrObj.onProcess = obj.@onProcess;
+					arrObj.stStatus = obj.@stStatus;
+					//arrObj.onProcess = obj.@onProcess;
 					arrCol.addItem(arrObj);
 				}
 				if (_params.qBox){					
