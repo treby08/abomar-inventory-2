@@ -40,13 +40,7 @@
 			$arrDetails = explode("|",$arr_sqDetails[$i]);
 			
 			$sql = "INSERT INTO salesInvoice_details (`sqd_sqID`, `sqd_prodID`, `quantity`, `price`, `totalPurchase`, `sqd_dateTrans`, `sqd_timeTrans`) VALUES ($sqID, ".$arrDetails[0].", ".$arrDetails[1].", ".$arrDetails[2].", ".$arrDetails[3].",NOW(), NOW())";
-			mysql_query($sql,$conn) or die(mysql_error().' '.$sql .' '. __LINE__);
-			
-			$stockSQL = "INSERT INTO stockUpdate (`stock_refID`,`stock_prodID`,`stock_branchID`,`updateDate`,`updateTime`,`deductStock`) VALUES ($sqID,".$arrDetails[0].",$sq_branchID,'$dateTrans',NOW(), ".$arrDetails[1].")";			
-			mysql_query($stockSQL,$conn) or die(mysql_error().' '.$stockSQL.' '. __LINE__);
-			
-			$prodSQL = "UPDATE products SET stockCount = stockCount - ".$arrDetails[1]." WHERE prodID = ".$arrDetails[0];
-			mysql_query($prodSQL,$conn) or die(mysql_error().' '.$prodSQL.' '. __LINE__);
+			mysql_query($sql,$conn) or die(mysql_error().' $sql '. __LINE__);
 		}
 		mysql_query("UPDATE salesQuote SET onProcess=1 WHERE sqID=".$salesQuoteID,$conn);
 		

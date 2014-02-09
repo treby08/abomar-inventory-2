@@ -51,20 +51,6 @@ WHERE  sq_custID=2 AND (pd.pd_amt-pd.pd_credit)<>0  ORDER BY `si`.`sqID` ASC*/
 			$xml .= "<item supID=\"".$row['supID']."\" supCode=\"".$row['supCode']."\" compName=\"".$row['supCompName']."\" creditLine=\"".$row['creditLine']."\" address=\"".$row['address']."\" pNum=\"".$row['phoneNum']."\" mNum=\"".$row['mobileNum']."\" tin=\"".$row['tin']."\" term=\"".$row['sup_term']."\" conPerson=\"".$row['conPerson']."\" desig=\"".$row['desig']."\" email=\"".$row['email']."\" web=\"".$row['web']."\" local=\"".$local."\"/>";
 		}
 		
-	}else if ($type == "stocks"){
-		$condition = $_REQUEST['condition']!=""?$_REQUEST['condition']:"";
-		$condition = stripslashes($condition);
-		$query = mysql_query('SELECT b.bCode,b.bLocation, p.prodModel,p.prodCode, su.* FROM stockUpdate su
-							INNER JOIN products p ON p.prodID=su.stock_prodID
-							INNER JOIN branches b ON b.branchID=su.stock_branchID '.$condition,$conn);
-		/*echo 'SELECT b.bCode,b.bLocation, p.prodModel,p.prodCode, su.* FROM stockUpdate su
-							INNER JOIN products p ON p.prodID=su.stock_prodID
-							INNER JOIN branches b ON b.branchID=su.stock_branchID '.$condition;*/
-		$xml = "<root>";
-		while($row = mysql_fetch_assoc($query)){
-			$xml .= "<item bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" prodModel=\"".$row['prodModel']."\" prodCode=\"".$row['prodCode']."\" stock_prodID=\"".$row['stock_prodID']."\" addedStock=\"".$row['addedStock']."\" deductStock=\"".$row['deductStock']."\" date=\"".$row['updateDate']."\" time=\"".$row['updateTime']."\" branchId=\"".$row['stock_branchID']."\" prodId=\"".$row['stock_prodID']."\" stock_refID=\"".$row['stock_refID']."\" />";
-		}
-		
 	}
 	$xml .= "</root>";
 	echo $xml;

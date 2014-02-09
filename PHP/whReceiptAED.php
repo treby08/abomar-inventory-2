@@ -43,33 +43,21 @@
 		$whr_whrID = $row['whrID'];
 		
 		$hasDiscrep = false;
-		$stockSQL = "";
 		for ($i=0; $i < count($arr_whrDetails); $i++){
 			$arrDetails = explode("|",$arr_whrDetails[$i]);
 			
 			$sql = "INSERT INTO wh_receipt_details (`whrd_whrID`, whrd_podID, `whrd_prodID`, `whrd_qty`, `whrd_qty_rec`, `whrd_pkgNo`, `whrd_dateTrans`, `whrd_timeTrans`, whrd_remarks, isNew) 
 			VALUES ($whr_whrID, ".$arrDetails[0].", ".$arrDetails[1].", ".$arrDetails[2].", ".$arrDetails[3].", '".$arrDetails[4]."', '$dateTrans', NOW(), ".$arrDetails[5].", ". $arrDetails[6].")";
-			$totQty = $arrDetails[3];
+			
 			mysql_query($sql,$conn) or die(mysql_error().' $sql '. __LINE__);
 			
 			if (count($arrDetails) > 6 && $arrDetails[6]=="1"){
 				$hasDiscrep = true;
-				//$totQty = $arrDetails[3];
-				/*$stockSQL = "INSERT INTO stockUpdate ('stock_refID','stock_prodID','stock_branchID','updateDate','updateTime','addedStock') VALUES (".$arrDetails[0].",".$arrDetails[1].",$branchID,'$dateTrans',NOW(), ".$arrDetails[2].")";*/
 			}else if ($arrDetails[2] != $arrDetails[3]){
-				//$totQty = $arrDetails[3];
-				/*$stockSQL = "INSERT INTO stockUpdate ('stock_refID','stock_prodID','stock_branchID','updateDate','updateTime','addedStock') VALUES (".$arrDetails[0].",".$arrDetails[1].",$branchID,'$dateTrans',NOW(), ".$diff.")";*/
 				$hasDiscrep = true;
 			}else if ($arrDetails[2] == $arrDetails[3] && ($arrDetails[5]==3 || $arrDetails[5]==5)){
 				$hasDiscrep = true;
-				//$totQty = $arrDetails[3];
 			}
-			
-			$stockSQL = "INSERT INTO stockUpdate (`stock_refID`,`stock_prodID`,`stock_branchID`,`updateDate`,`updateTime`,`addedStock`) VALUES (".$arrDetails[0].",".$arrDetails[1].",$branchID,'$dateTrans',NOW(), ".$totQty.")";
-			mysql_query($stockSQL,$conn) or die(mysql_error().' '.$stockSQL.' '. __LINE__);
-			
-			$prodSQL = "UPDATE products SET stockCount = stockCount + ".$totQty." WHERE prodID = ".$arrDetails[1];
-			mysql_query($prodSQL,$conn) or die(mysql_error().' '.$prodSQL.' '. __LINE__);
 		}
 		
 		
