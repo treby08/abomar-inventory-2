@@ -54,7 +54,7 @@
 			}
 			
 			private function init():void{
-				if (!isProcess){
+				if (!isProcess  && _memoType=="Credit"){
 					var log:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.SEARCH_PRODUCT,{searchstr:"",condition:"",sBox:this})
 					CairngormEventDispatcher.getInstance().dispatchEvent(log);
 				}
@@ -81,22 +81,24 @@
 			protected function creationCompleteHandler(event:FlexEvent):void
 			{
 				dfDate.selectedDate = new Date();
-				if (!isProcess){
+				if (!isProcess && _memoType=="Credit"){
 					var log3:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.GET_MEMO_NUMBER,{qBox:this})
 					CairngormEventDispatcher.getInstance().dispatchEvent(log3);
 					
 				}else{
-					cont.visible = false;
+					//cont.visible = false;
 					prodBox.visible = prodBox.includeInLayout = false;
 					dg.editable = false;
 					dg.doubleClickEnabled = false;
-					hgControl.visible = false;
+					//hgControl.visible = false;
 					txtPrepBy.editable = false;
 					txtAppBy.editable = false;
+					txtSInstruction.editable = false;
 					dfDate.editable = dfDate.enabled = false;
 					gcRemove.visible = false;
 					cmbBranchDesti.enabled = false;
 					cmbBranchOrig.enabled = false;
+					btnNew.visible = btnNew.includeInLayout = false;
 				}
 				
 				
@@ -173,14 +175,15 @@
 				}
 			}
 			
-			public function setSelectedBranch(bID:String):void{
-				/*for each (var item:Object in cmbBranch.dataProvider as ArrayCollection){
+			public function setSelectedBranch(bID:String,type:int):void{
+				var cmbBranch:DropDownList = type==1?cmbBranchOrig:cmbBranchDesti;
+				for each (var item:Object in cmbBranch.dataProvider as ArrayCollection){
 					trace(item.branchID," == ",bID)
 					if (item.branchID == bID){
 						cmbBranch.selectedItem = item;
 						break;
 					}	
-				}*/
+				}
 			}
 			
 			public function removeItemHandler(obj:Object):void{
@@ -334,19 +337,34 @@
 				
 				var strItem:Array = new Array();
 				for each (var item:Object in dg.dataProvider){
-					strItem.push(item.prodDBID+"|"+item.qty+"|"+item.prdID);
+					item.prodDBID = item.prodDBID==undefined?item.stProdID:item.prodDBID;
+					strItem.push(item.prodDBID+"|"+item.qty+"|"+item.stockTDID);
 				}
 				obj.stockDetails = strItem.join("||");
 				trace("obj.memoDetails:",obj.stockDetails)
 				var log2:ItemsTransEvent;
-				if (_type==0){
-					log2 = new ItemsTransEvent(ItemsTransEvent.ADD_MEMO,obj)
-					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
-				}else if (_type==1){
-					obj.memoID = _data.memoID;
+				if (_memoType == "Credit"){
+					if (_type==0){
+						log2 = new ItemsTransEvent(ItemsTransEvent.ADD_MEMO,obj)
+						CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+					}else if (_type==1){
+						obj.stockTID = _data.stockTID;
+						obj.pBox = this;
+						_fromUpdate = true;
+						log2 = new ItemsTransEvent(ItemsTransEvent.EDIT_MEMO,obj)
+						CairngormEventDispatcher.getInstance().dispatchEvent(log2);
+					}
+				}else{
+					if (_data.stStatus == 1){
+						Alert.show("Debit Memo Already Accepted","Submit Memo Error");
+						return;
+					}
+					obj = {}
+					obj.stockTID = _data.stockTID;
+					obj.stat = 1;
 					obj.pBox = this;
 					_fromUpdate = true;
-					log2 = new ItemsTransEvent(ItemsTransEvent.EDIT_MEMO,obj)
+					log2 = new ItemsTransEvent(ItemsTransEvent.CHANGE_MEMO_STATUS,obj)
 					CairngormEventDispatcher.getInstance().dispatchEvent(log2);
 				}
 				
@@ -366,7 +384,7 @@
 			{
 				var _printBox:PrintPrevBox = new PrintPrevBox();
 				_printBox.boxType = this;
-				_printBox.orderTypeID = 5;
+				_printBox.orderTypeID = _memoType=="Credit"?6:7;
 				_printBox.width = AccessVars.instance().mainApp.width-5;
 				_printBox.height = AccessVars.instance().mainApp.height-5;
 				PopUpManager.addPopUp(_printBox,this,true);
@@ -398,8 +416,8 @@
 					_data.srPrice = txtSRP.text;
 					_data.priceCurr = cmbLstCurr.selectedIndex+"|"+cmbDealCurr.selectedIndex;*/
 					
-					(theOwner as PurchaseReqRenderer).data = _data;
-					(theOwner as PurchaseReqRenderer).creationCompleteHandler(null);
+					(theOwner as MemoRenderer).data = _data;
+					(theOwner as MemoRenderer).creationCompleteHandler(null);
 					return;
 				}
 				viewOnly(true)
@@ -534,6 +552,7 @@
 					btnCheckOut.label = "Submit "+_memoType+" Memo";
 					btnCheckOut.visible = btnCheckOut.includeInLayout = true;
 					btnEdit.visible = btnEdit.includeInLayout = false;
+					btnView.visible = btnView.includeInLayout = false;
 					statChange.visible = statChange.includeInLayout = false;
 					cbCancel.selected = false;
 					cbCancel_changeHandler(null);
@@ -553,6 +572,7 @@
 					btnCheckOut.label = "Submit "+_memoType+" Memo";
 					btnCheckOut.visible = btnCheckOut.includeInLayout = true;
 					btnEdit.visible = btnEdit.includeInLayout = false;
+					btnView.visible = btnView.includeInLayout = false;
 					statChange.visible = statChange.includeInLayout = false;
 					cbCancel.selected = false;
 					cbCancel_changeHandler(null);
@@ -570,6 +590,8 @@
 				_type = 1;
 				btnCheckOut.label = "Save "+_memoType+" Memo Changes";
 				btnCheckOut.visible = btnCheckOut.includeInLayout = true;
+				btnView.visible = btnView.includeInLayout = true;
+				btnEdit.visible = btnEdit.includeInLayout = true;
 				mainCont.enabled = true;
 			}
 			
@@ -606,8 +628,8 @@
 			{
 				_data.purReqID;
 				var obj:Object = new Object();
-				obj.purReqID = _data.purReqID;
-				obj.stat = _data.prStatus = cbCancel.selected?3:0;
+				obj.memoID = _data.memoID;
+				obj.stat = _data.stStatus = cbCancel.selected?3:0;
 				obj.pBox = this;
 				_fromUpdate = true;
 				var log2:ItemsTransEvent = new ItemsTransEvent(ItemsTransEvent.CHANGE_MEMO_STATUS,obj)
@@ -628,9 +650,9 @@
 			}
 			
 			public function updateRenderer(stat:int):void{
-				_data.stat = stat;
+				_data.stStatus = stat;
 				if (theOwner){
-					(theOwner as PurchaseReqRenderer).data = _data;
+					(theOwner as MemoRenderer).data = _data;
 				}
 			}
 			
@@ -642,6 +664,7 @@
 					CairngormEventDispatcher.getInstance().dispatchEvent(log);
 					btnCheckOut.visible = btnCheckOut.includeInLayout = false;
 					btnEdit.visible = btnEdit.includeInLayout = false;
+					btnView.visible = btnView.includeInLayout = false;
 					mainCont.enabled = false;
 					clearFields(null);
 				}else{
@@ -734,8 +757,8 @@
 							<s:Button label="Confirm" click="updateCancel_clickHandler(event)"/>
 						</s:HGroup>
 						<s:HGroup  width="100%" verticalAlign="middle">
-							<s:Label text="Destination" width="90" textAlign="right"/>
-							<s:DropDownList id="cmbBranchDesti" width="100%" prompt="[Destination Branch]" change="cmbBranchchangeHandler(event)"/>
+							<s:Label text="Receiving" width="90" textAlign="right"/>
+							<s:DropDownList id="cmbBranchDesti" width="100%" prompt="[Receiving Branch]" change="cmbBranchchangeHandler(event)"/>
 						</s:HGroup>
 						
 					</s:VGroup>
@@ -860,7 +883,7 @@
 			<s:Spacer width="100%"/>
 			<s:Button id="btnNew"  label="{'New '+_memoType+' Memo'}" click="btnNewclickHandler(event)"/>
 			<s:Button id="btnEdit"  label="{'Edit '+_memoType+' Memo'}" click="editClickHandler(event)" visible="false" includeInLayout="false"/>
-			<!--<s:Button id="btnView"  label="View Memo" click="printPrevPO()" visible="false" includeInLayout="false"/>-->
+			<s:Button id="btnView"  label="{'Print '+_memoType+' Memo'}" click="printPrevPO()" visible="false" includeInLayout="false"/>
 		</s:HGroup>
 		
 	</s:VGroup>

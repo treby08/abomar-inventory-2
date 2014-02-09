@@ -197,7 +197,7 @@
 						//onProcess = cmbIStatus.selectedItem.type==-1?")":"AND stStatus="+cmbIStatus.selectedItem.type+")";
 						condExp = " branchOID ="+cmbBranch_Memo.selectedItem.branchID+" OR (dateTrans >='"+setDateFormat(sDate_Memo.selectedDate)+"' AND dateTrans <='"+setDateFormat(eDate_Memo.selectedDate)+"')";
 						condition = condMemoID+" "+condExp;
-						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_MEMO,{searchstr:"null",condition:condition,sBox:mainComp,onProcess:""})
+						log = new ItemsTransEvent(ItemsTransEvent.SEARCH_MEMO,{searchstr:"null",condition:condition,qBox:mainComp,onProcess:""})
 						CairngormEventDispatcher.getInstance().dispatchEvent(log);
 						break;
 				}
