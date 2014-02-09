@@ -1369,16 +1369,18 @@ package com.module.business
 				//arrObj = {};
 				for each (obj in listXML.children()){
 					arrObj = new Object();
-					/*"<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" 
-					preparedBy=\"".$row['preparedBy']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" 
-					branchID=\"".$row['branchID']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" 
-					stStatus=\"".$row['stStatus']."\"/>";
+					/*<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" 
+					preparedBy=\"".$row['prepBy']."\" spInstruct=\"".$row['spInstruct']."\" 
+					branchDID=\"".$row['branchDID']."\" branchOID=\"".$row['branchOID']."\" 
+					approvedBy=\"".$row['appBy']."\" dateTrans=\"".$row['dateTrans']."\" stStatus=\"".$row['stStatus']."\"/>
 					*/
 					arrObj.stockTID = obj.@stockTID;
 					arrObj.memoNo = obj.@reqNo;
 					arrObj.bCode = obj.@bCode;					
 					arrObj.bLocation = obj.@bLocation;					
-					arrObj.branchID = obj.@branchID;
+					arrObj.branchOID = obj.@branchOID;					
+					arrObj.spInstruct = obj.@spInstruct;					
+					arrObj.branchDID = obj.@branchDID;
 					arrObj.preparedBy = obj.@preparedBy;
 					arrObj.approvedBy = obj.@approvedBy;
 					arrObj.dateTrans = obj.@dateTrans;

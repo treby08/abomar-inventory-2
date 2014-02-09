@@ -58,6 +58,7 @@
 	<fx:Script>
 		<![CDATA[
 			import com.module.views.printViews.PrintInvoice;
+			import com.module.views.printViews.PrintMemo;
 			import com.module.views.printViews.PrintPayment;
 			import com.module.views.printViews.PrintPurchaseOrder;
 			import com.module.views.printViews.PrintPurchaseRequisition;
@@ -98,7 +99,8 @@
 			private var arrOrderType:ArrayCollection = new ArrayCollection(
 				[{name:"Purchase Order",type:0},{name:"Warehouse Receipt",type:1},
 				{name:"Invoice",type:2},{name:"Warehouse Discrepancy",type:3},
-				{name:"Payment",type:4},{name:"Purchase Requisition",type:5}])
+				{name:"Payment",type:4},{name:"Purchase Requisition",type:5},
+				{name:"Credit Memo",type:6},{name:"Debit Memo",type:7}])
 			
 			public function set boxType(value:Object):void{
 				_salesBox = value;
@@ -159,6 +161,14 @@
 						pntPR.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name).toUpperCase();
 						childCanvas.addElement(pntPR);
 					break;
+					case 6:// CreditDebit Memo
+					case 7:
+						var pntMem:PrintMemo = new PrintMemo();
+						pntMem.salesBox = _salesBox as CreditMemoBox;
+						pntMem.orderTypeText = String(arrOrderType.getItemAt(_orderTypeID).name);
+						pntMem._orderTypeInitial = _orderTypeID==6?"CM":"DM";
+						childCanvas.addElement(pntMem);
+						break;
 				}
 				
 				//childCanvas.y = parentCanvasHeight/2 - childCanvasHeight/2;
