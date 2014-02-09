@@ -22,7 +22,7 @@
 	}else if ($type == "get_details"){
 		$stockTID = $_REQUEST['stockTID'];
 		$condition = $_REQUEST['condition']!=""?$_REQUEST['condition']:"";
-		$isPurOrd = $_REQUEST['isPurOrd']!=""?$_REQUEST['isPurOrd']:"";
+		//$isPurOrd = $_REQUEST['isPurOrd']!=""?$_REQUEST['isPurOrd']:"";
 	}else if ($type == "change_stat"){
 		$stockTID = $_REQUEST['stockTID'];
 		$stat = $_REQUEST['stat'];
@@ -55,7 +55,7 @@
 			if ($arrDetails[2]=="undefined"){
 				$sql = "INSERT INTO stock_transfer_details (`stockTID`, `stProdID`, `stQty`) VALUES ($stockTID, ".$arrDetails[0].", ".$arrDetails[1].")";
 			}else{
-				$sql = "UPDATE purchaseReq_details SET stProdID=".$arrDetails[0].", stQty=".$arrDetails[1].", stdStatus=0 
+				$sql = "UPDATE stock_transfer_details SET stProdID=".$arrDetails[0].", stQty=".$arrDetails[1].", stdStatus=0 
 				WHERE stockTDID=".$arrDetails[2];
 			}
 			mysql_query($sql,$conn) or die(mysql_error().' '.$sql.' '. __LINE__);
@@ -71,7 +71,7 @@
 		$query = mysql_query($sql,$conn) or die(mysql_error().' '.$sql.' '. __LINE__); 
 		$xml = "<root>";
 			while($row = mysql_fetch_assoc($query)){
-				$xml .= "<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" preparedBy=\"".$row['preparedBy']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\" branchID=\"".$row['branchID']."\" approvedBy=\"".$row['approvedBy']."\" dateTrans=\"".$row['dateTrans']."\" stStatus=\"".$row['stStatus']."\"/>";
+				$xml .= "<item stockTID=\"".$row['stockTID']."\" reqNo=\"".number_pad($row['stockTID'])."\" preparedBy=\"".$row['prepBy']."\" spInstruct=\"".$row['spInstruct']."\" branchDID=\"".$row['branchDID']."\" branchOID=\"".$row['branchOID']."\" approvedBy=\"".$row['appBy']."\" dateTrans=\"".$row['dateTrans']."\" stStatus=\"".$row['stStatus']."\" bCode=\"".$row['bCode']."\" bLocation=\"".$row['bLocation']."\"/>";
 			}
 		$xml .= "</root>";
 		echo $xml;
@@ -80,7 +80,7 @@
 		$query = mysql_query("SELECT *
 							FROM stock_transfer_details pr 
 							INNER JOIN products p ON pr.stProdID=p.prodID
-							WHERE pr.stockTID = $stockTID AND stdStatus=1 ".$condition,$conn);
+							WHERE pr.stockTID = $stockTID AND stdStatus=0 ".$condition,$conn);
 		$xml = "<root>";
 			while($row = mysql_fetch_assoc($query)){
 				$qty = $row['stQty'];
